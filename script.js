@@ -6,11 +6,13 @@ const termsAcceptButton = document.getElementById("termsAcceptButton");
 const termsRejectLink = document.getElementById("termsRejectLink");
 const glossaryButton = document.getElementById("glossaryButton");
 const inGameGlossaryButton = document.getElementById("inGameGlossaryButton");
+const fullscreenButton = document.getElementById("fullscreenButton");
 const glossaryModal = document.getElementById("glossary-modal");
 const glossaryContent = document.getElementById("glossaryContent");
 const glossaryCloseButton = document.getElementById("glossaryCloseButton");
 const victoryOverlay = document.getElementById("victoryOverlay");
 const defeatOverlay = document.getElementById("defeatOverlay");
+const defeatTitle = document.getElementById("defeatTitle");
 const nextPhaseButton = document.getElementById("nextPhaseButton");
 const retryButton = document.getElementById("retryButton");
 const victoryQuoteText = document.getElementById("victoryQuoteText");
@@ -23,6 +25,13 @@ const cutsceneCtx = cutsceneCanvas.getContext("2d");
 const cutsceneSpeaker = document.getElementById("cutsceneSpeaker");
 const cutsceneText = document.getElementById("cutsceneText");
 const cutsceneNextButton = document.getElementById("cutsceneNextButton");
+const studentSelectionScreen = document.getElementById("student-selection-screen");
+const studentSelectionTitle = document.getElementById("studentSelectionTitle");
+const studentInstructionText = document.querySelector(".student-copy");
+const graduationScreen = document.getElementById("graduation-screen");
+const graduationText = document.getElementById("graduationText");
+const journeyRestartButton = document.getElementById("journeyRestartButton");
+const creditsButton = document.getElementById("creditsButton");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -86,7 +95,55 @@ const quotesVictory = [
   }
 ];
 
-const glossarioData = [
+const referenciasData = [
+  {
+    id: 1,
+    autor: "SAVIANI, Demerval",
+    titulo: "Trabalho e educa\u00e7\u00e3o: fundamentos ontol\u00f3gicos e hist\u00f3ricos."
+  },
+  {
+    id: 2,
+    autor: "NOSELLA, Paolo",
+    titulo: "A educa\u00e7\u00e3o no S\u00e9culo XXI: integrar trabalho e tempo livre."
+  },
+  {
+    id: 3,
+    autor: "MANFREDI, S.M.",
+    titulo: "Educa\u00e7\u00e3o profissional no Brasil: atores e cen\u00e1rios."
+  },
+  {
+    id: 4,
+    autor: "DELEUZE, Gilles",
+    titulo: "Post-scriptum sobre as sociedades de controle."
+  },
+  {
+    id: 5,
+    autor: "FOUCAULT, Michel",
+    titulo: "Nascimento da Biopol\u00edtica."
+  },
+  {
+    id: 6,
+    autor: "CHAMAYOU, Gr\u00e9goire",
+    titulo: "A sociedade ingovern\u00e1vel."
+  },
+  {
+    id: 7,
+    autor: "LAVAL, Christian",
+    titulo: "A Escola n\u00e3o \u00e9 uma empresa."
+  },
+  {
+    id: 8,
+    autor: "ALYS, Francis",
+    titulo: "Paradoja de la praxis."
+  },
+  {
+    id: 9,
+    autor: "FREIRE, Emerson",
+    titulo: "'Faltam-nos poetas t\u00e9cnicos': em dire\u00e7\u00e3o a uma forma\u00e7\u00e3o tecnoest\u00e9tica."
+  }
+];
+
+const referenciasDataLegacy = [
   {
     id: 1,
     titulo: "Fundamentos Ontológicos",
@@ -222,57 +279,58 @@ class AudioManager {
 
     this.stopBossBGM();
 
-    const now = this.context.currentTime;
-    if (this.bgmOscillator) {
-      this.bgmGain.gain.cancelScheduledValues(now);
-      this.bgmGain.gain.setTargetAtTime(0.035, now, 0.2);
+    if (this.bgmIntervalId) {
       return;
     }
 
-    this.bgmOscillator = this.context.createOscillator();
-    this.bgmLfo = this.context.createOscillator();
-    this.bgmLfoGain = this.context.createGain();
-    this.bgmGain = this.context.createGain();
+    // A fun, bouncy, major pentatonic melody
+    const melody = [261.63, 329.63, 392.00, 329.63, 261.63, 392.00, 440.00, 392.00];
+    let step = 0;
 
-    this.bgmOscillator.type = "sine";
-    this.bgmOscillator.frequency.setValueAtTime(58, now);
+    this.bgmIntervalId = setInterval(() => {
+      if (!this.context) return;
+      const tickTime = this.context.currentTime;
+      const freq = melody[step % melody.length];
 
-    this.bgmLfo.type = "sine";
-    this.bgmLfo.frequency.setValueAtTime(0.18, now);
-    this.bgmLfoGain.gain.setValueAtTime(9, now);
-    this.bgmLfo.connect(this.bgmLfoGain);
-    this.bgmLfoGain.connect(this.bgmOscillator.frequency);
+      // Play main melody
+      const osc = this.context.createOscillator();
+      const gain = this.context.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, tickTime);
+      gain.gain.setValueAtTime(0.001, tickTime);
+      gain.gain.exponentialRampToValueAtTime(0.02, tickTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.15);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(tickTime);
+      osc.stop(tickTime + 0.2);
 
-    this.bgmGain.gain.setValueAtTime(0.001, now);
-    this.bgmGain.gain.setTargetAtTime(0.035, now, 0.35);
+      // Bouncy bass on alternating steps
+      if (step % 2 === 0) {
+        const bass = this.context.createOscillator();
+        const bassGain = this.context.createGain();
+        bass.type = "sine";
+        bass.frequency.setValueAtTime(130.81, tickTime); // Low C
+        bassGain.gain.setValueAtTime(0.001, tickTime);
+        bassGain.gain.exponentialRampToValueAtTime(0.025, tickTime + 0.02);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.15);
+        bass.connect(bassGain);
+        bassGain.connect(this.masterGain);
+        bass.start(tickTime);
+        bass.stop(tickTime + 0.2);
+      }
 
-    this.bgmOscillator.connect(this.bgmGain);
-    this.bgmGain.connect(this.masterGain);
-
-    this.bgmOscillator.start(now);
-    this.bgmLfo.start(now);
+      step++;
+    }, 180);
   }
 
   stopBGM() {
     this.stopBossBGM();
 
-    if (!this.context || !this.bgmOscillator) {
-      return;
+    if (this.bgmIntervalId) {
+      clearInterval(this.bgmIntervalId);
+      this.bgmIntervalId = null;
     }
-
-    const now = this.context.currentTime;
-    this.bgmGain.gain.cancelScheduledValues(now);
-    this.bgmGain.gain.setTargetAtTime(0.001, now, 0.08);
-
-    const oscillator = this.bgmOscillator;
-    const lfo = this.bgmLfo;
-    oscillator.stop(now + 0.25);
-    lfo.stop(now + 0.25);
-
-    this.bgmOscillator = null;
-    this.bgmLfo = null;
-    this.bgmLfoGain = null;
-    this.bgmGain = null;
   }
 
   playBossBGM() {
@@ -386,6 +444,31 @@ const CHARACTERS = {
     name: "Prof. Juliana",
     color: "#27ae60",
     accent: "#9be7b3"
+  },
+  anderson: {
+    name: "Anderson",
+    color: "#111111",
+    accent: "#f0c48a"
+  },
+  rafael: {
+    name: "Rafael",
+    color: "#cccccc",
+    accent: "#ff3030"
+  },
+  viviane: {
+    name: "Viviane",
+    color: "#6b7280",
+    accent: "#f2c6a0"
+  },
+  rodrigo: {
+    name: "Rodrigo",
+    color: "#3d6ea8",
+    accent: "#d59a6f"
+  },
+  myllena: {
+    name: "Myllena",
+    color: "#202632",
+    accent: "#f0b7a4"
   }
 };
 
@@ -402,148 +485,251 @@ function drawCharacter(context, x, y, width, height, characterName) {
   const isJuliana = normalizedName.includes("juliana");
   const isCeli = normalizedName.includes("celi");
   const isGiordano = normalizedName.includes("giordano");
+  const isAnderson = normalizedName.includes("anderson");
+  const isRafael = normalizedName.includes("rafael");
+  const isViviane = normalizedName.includes("viviane");
+  const isRodrigo = normalizedName.includes("rodrigo");
+  const isMyllena = normalizedName.includes("myllena");
 
+  // Pastel & Sophisticated Palette (Google Doodle Style)
   const palette = isJuliana
-    ? {
-        skin: "#9be7b3",
-        outfit: "#27ae60",
-        outfitDark: "#125b37",
-        detail: "#d9ffe7",
-        shoe: "#101317"
-      }
+    ? { skin: "#fcd6a9", outfit: "#63c78a", outfitDark: "#3a8b5c", detail: "#e8f7ec", shoe: "#2a3b32" }
     : isCeli
-    ? {
-        skin: "#f0c8ff",
-        outfit: "#c23bff",
-        outfitDark: "#5c1379",
-        detail: "#ffe5ff",
-        shoe: "#241127"
-      }
+    ? { skin: "#ffdfc4", outfit: "#b48eed", outfitDark: "#7d5aa6", detail: "#f4edfc", shoe: "#3a2a4f" }
     : isGiordano
-    ? {
-        skin: "#d8f2ff",
-        outfit: "#4fc3ff",
-        outfitDark: "#1b5f8f",
-        detail: "#ffb038",
-        shoe: "#12263a"
-      }
-    : {
-        skin: "#9cc7ff",
-        outfit: "#2f80ed",
-        outfitDark: "#143c7a",
-        detail: "#d9ecff",
-        shoe: "#101317"
-      };
+    ? { skin: "#ffe5d4", outfit: "#7cbbe8", outfitDark: "#4a7c9e", detail: "#ffce7a", shoe: "#2a3b4c" }
+    : isAnderson
+    ? { skin: "#f2cfa5", outfit: "#2d2d2d", outfitDark: "#1a1a1a", detail: "#8b5a2b", shoe: "#1a1a1a" }
+    : isViviane
+    ? { skin: "#e8c39e", outfit: "#e0d4c1", outfitDark: "#9c8e7e", detail: "#8c6b51", shoe: "#4a443e" }
+    : isRodrigo
+    ? { skin: "#cfa684", outfit: "#6c8ebf", outfitDark: "#405b82", detail: "#f0f4f8", shoe: "#2d3745" }
+    : isMyllena
+    ? { skin: "#f5d0bd", outfit: "#363d4a", outfitDark: "#222730", detail: "#f2ebd9", shoe: "#1f242b" }
+    : { skin: "#ffd6c2", outfit: "#6fa6f2", outfitDark: "#3b69a6", detail: "#e3effc", shoe: "#2b3440" }; // Emerson
 
-  const headRadius = Math.min(width * 0.34, height * 0.23);
-  const centerX = width / 2;
-  const headY = height * 0.2;
-  const bodyTop = height * 0.36;
-  const bodyBottom = height * 0.9;
+  // Bouncy Animation (Idle Breathing)
+  const time = Date.now();
+  const bounceSlow = Math.sin(time / 250);
+  
+  // Rafael is a robot, mechanical bounce
+  const stretchY = isRafael ? 1 + (Math.sin(time / 100) * 0.02) : 1 + (bounceSlow * 0.04);
+  const stretchX = isRafael ? 1 - (Math.sin(time / 100) * 0.01) : 1 - (bounceSlow * 0.02);
+  const bounceOffset = isRafael ? 0 : bounceSlow * 2;
 
   context.save();
-  context.translate(x, y);
+  context.translate(x + width / 2, y + height); // move to bottom center
 
-  context.fillStyle = "rgba(0, 0, 0, 0.28)";
+  // Shadow (Flat Design, rounded, stays on ground)
+  context.fillStyle = "rgba(0, 0, 0, 0.15)";
   context.beginPath();
-  context.ellipse(centerX, height + 6, width * 0.58, height * 0.11, 0, 0, Math.PI * 2);
+  context.ellipse(0, 4, width * 0.45 * stretchX, height * 0.08, 0, 0, Math.PI * 2);
   context.fill();
+
+  // Apply Bouncy Scaling
+  context.scale(stretchX, stretchY);
+  context.translate(-width / 2, -height + bounceOffset); // move back up to top-left of local drawing box
+
+  const centerX = width / 2;
+  const headY = height * 0.25;
+  const bodyTop = height * 0.45;
+  const bodyBottom = height * 0.9;
+  const headRadius = Math.min(width * 0.35, height * 0.22);
+
+  // Helper for Native roundRect with fallback
+  const drawRoundedRect = (cx, cy, cw, ch, r) => {
+    context.beginPath();
+    if(context.roundRect) {
+       context.roundRect(cx, cy, cw, ch, r);
+    } else if (typeof roundRect === 'function') {
+       roundRect(context, cx, cy, cw, ch, r); // use game's custom if native missing
+    } else {
+       context.rect(cx, cy, cw, ch);
+    }
+  };
+
+  if (isRafael) {
+    // Rafael: Robot! Grey square body, red glowing eyes, antenna.
+    context.strokeStyle = "#888";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(centerX, height * 0.1);
+    context.lineTo(centerX, -height * 0.08);
+    context.stroke();
+    context.fillStyle = "#ff5555";
+    context.beginPath();
+    context.arc(centerX, -height * 0.08, width * 0.06, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "#e0e0e0";
+    drawRoundedRect(width * 0.15, bodyTop, width * 0.7, height * 0.45, width * 0.1);
+    context.fill();
+
+    context.fillStyle = "#cccccc";
+    drawRoundedRect(width * 0.2, height * 0.1, width * 0.6, height * 0.35, width * 0.1);
+    context.fill();
+
+    context.shadowColor = "#ff3030";
+    context.shadowBlur = 12;
+    context.fillStyle = "#ff3030";
+    context.beginPath();
+    context.arc(centerX - width * 0.15, height * 0.25, width * 0.07, 0, Math.PI * 2);
+    context.arc(centerX + width * 0.15, height * 0.25, width * 0.07, 0, Math.PI * 2);
+    context.fill();
+    context.shadowBlur = 0;
+
+    context.fillStyle = "#8fe8ff";
+    drawRoundedRect(width * 0.25, bodyTop + height * 0.1, width * 0.5, height * 0.15, width * 0.05);
+    context.fill();
+
+    context.fillStyle = "#333";
+    drawRoundedRect(width * 0.2, bodyBottom, width * 0.2, height * 0.1, width * 0.05);
+    drawRoundedRect(width * 0.6, bodyBottom, width * 0.2, height * 0.1, width * 0.05);
+    context.fill();
+
+    context.restore();
+    return;
+  }
+
+  // --- Normal Characters ---
+  context.fillStyle = palette.shoe;
+  drawRoundedRect(width * 0.25, bodyBottom - height * 0.05, width * 0.18, height * 0.15, width * 0.08);
+  context.fill();
+  drawRoundedRect(width * 0.57, bodyBottom - height * 0.05, width * 0.18, height * 0.15, width * 0.08);
+  context.fill();
+
+  context.fillStyle = palette.outfit;
+  if (isJuliana || isCeli || isViviane || isMyllena) {
+    if (isMyllena) {
+      context.fillStyle = palette.outfitDark;
+      drawRoundedRect(width * 0.25, bodyTop + height * 0.2, width * 0.5, height * 0.25, width * 0.05);
+      context.fill();
+      context.fillStyle = palette.outfit;
+      drawRoundedRect(width * 0.2, bodyTop, width * 0.6, height * 0.28, width * 0.12);
+      context.fill();
+      context.fillStyle = palette.detail;
+      context.beginPath();
+      context.moveTo(centerX, bodyTop + height * 0.2);
+      context.lineTo(centerX - width * 0.1, bodyTop);
+      context.lineTo(centerX + width * 0.1, bodyTop);
+      context.fill();
+    } else if (isViviane) {
+      context.fillStyle = palette.outfitDark;
+      drawRoundedRect(width * 0.2, bodyTop + height * 0.2, width * 0.6, height * 0.28, width * 0.05);
+      context.fill();
+      context.fillStyle = palette.outfit;
+      drawRoundedRect(width * 0.18, bodyTop, width * 0.64, height * 0.25, width * 0.1);
+      context.fill();
+    } else {
+      context.beginPath();
+      context.moveTo(centerX, bodyTop - height * 0.05);
+      context.quadraticCurveTo(width * 0.8, bodyTop + height * 0.2, width * 0.85, bodyBottom);
+      context.lineTo(width * 0.15, bodyBottom);
+      context.quadraticCurveTo(width * 0.2, bodyTop + height * 0.2, centerX, bodyTop - height * 0.05);
+      context.fill();
+      context.fillStyle = palette.outfitDark;
+      drawRoundedRect(width * 0.25, bodyTop + height * 0.15, width * 0.5, height * 0.06, width * 0.03);
+      context.fill();
+    }
+  } else {
+    const torsoW = width * 0.6;
+    const torsoH = height * 0.45;
+    const torsoX = centerX - torsoW / 2;
+    
+    context.fillStyle = palette.outfit;
+    drawRoundedRect(torsoX, bodyTop, torsoW, torsoH, width * 0.1);
+    context.fill();
+
+    if (isEmerson) {
+      context.save();
+      context.beginPath();
+      if(context.roundRect) {
+         context.roundRect(torsoX, bodyTop, torsoW, torsoH, width * 0.1);
+      } else {
+         context.rect(torsoX, bodyTop, torsoW, torsoH);
+      }
+      context.clip();
+
+      const stripeH = height * 0.06;
+      for (let i = 0; i < 8; i++) {
+        context.fillStyle = i % 2 === 0 ? "#ffffff" : "#1a2b4c";
+        context.fillRect(torsoX, bodyTop + i * stripeH, torsoW, stripeH);
+      }
+      context.restore();
+
+      context.fillStyle = "#e63946";
+      drawRoundedRect(width * 0.3, bodyTop - height * 0.05, width * 0.4, height * 0.15, width * 0.08);
+      context.fill();
+      drawRoundedRect(width * 0.5, bodyTop, width * 0.15, height * 0.25, width * 0.08);
+      context.fill();
+    }
+
+    if (isAnderson) {
+      context.save();
+      context.translate(centerX, bodyTop + height * 0.2);
+      context.rotate(-Math.PI / 4);
+      context.fillStyle = "#5c3a21";
+      drawRoundedRect(-width * 0.4, -height * 0.05, width * 0.9, height * 0.1, width * 0.02);
+      context.fill();
+      context.fillStyle = "#cccccc";
+      for(let i=0; i<4; i++) {
+         context.fillRect(-width * 0.3 + i * width * 0.15, -height * 0.05, width * 0.02, height * 0.1);
+      }
+      context.restore();
+    }
+
+    if (isRodrigo) {
+      context.fillStyle = palette.detail;
+      drawRoundedRect(width * 0.35, bodyTop, width * 0.3, height * 0.1, width * 0.05);
+      context.fill();
+    }
+  }
 
   context.fillStyle = palette.skin;
   context.beginPath();
   context.arc(centerX, headY, headRadius, 0, Math.PI * 2);
   context.fill();
 
-  context.fillStyle = palette.outfit;
-
-  if (isJuliana || isCeli) {
-    // Vestido compartilhado em todos os contextos: Player, NPC e retrato.
+  context.fillStyle = "#2b2b2b";
+  const eyeOffset = width * 0.12;
+  const eyeRadius = Math.max(2, width * 0.05);
+  const isBlinking = Math.sin(time / 150) > 0.96;
+  if (isBlinking) {
     context.beginPath();
-    context.moveTo(centerX, bodyTop);
-    context.lineTo(width * 0.16, bodyBottom);
-    context.lineTo(width * 0.84, bodyBottom);
-    context.closePath();
-    context.fill();
-
-    context.strokeStyle = palette.outfitDark;
-    context.lineWidth = Math.max(2, width * 0.06);
-    context.beginPath();
-    context.moveTo(width * 0.32, bodyTop + height * 0.11);
-    context.lineTo(width * 0.68, bodyTop + height * 0.11);
+    context.moveTo(centerX - eyeOffset - eyeRadius, headY);
+    context.lineTo(centerX - eyeOffset + eyeRadius, headY);
+    context.moveTo(centerX + eyeOffset - eyeRadius, headY);
+    context.lineTo(centerX + eyeOffset + eyeRadius, headY);
+    context.lineWidth = 2;
+    context.strokeStyle = "#2b2b2b";
     context.stroke();
-
-    context.fillStyle = palette.detail;
-    context.beginPath();
-    context.arc(centerX, bodyTop + height * 0.12, Math.max(2, width * 0.07), 0, Math.PI * 2);
-    context.fill();
   } else {
-    const torsoX = width * 0.18;
-    const torsoY = bodyTop;
-    const torsoWidth = width * 0.64;
-    const torsoHeight = height * 0.54;
+    context.beginPath();
+    context.arc(centerX - eyeOffset, headY, eyeRadius, 0, Math.PI * 2);
+    context.arc(centerX + eyeOffset, headY, eyeRadius, 0, Math.PI * 2);
+    context.fill();
+  }
 
-    if (isEmerson) {
-      context.save();
-      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
-      context.clip();
-
-      const stripeHeight = Math.max(3, height * 0.075);
-      for (let stripeY = torsoY; stripeY < torsoY + torsoHeight; stripeY += stripeHeight) {
-        const stripeIndex = Math.floor((stripeY - torsoY) / stripeHeight);
-        context.fillStyle = stripeIndex % 2 === 0 ? "#f8f8f2" : "#000080";
-        context.fillRect(torsoX, stripeY, torsoWidth, stripeHeight);
-      }
-
-      context.restore();
-
-      context.strokeStyle = palette.outfitDark;
-      context.lineWidth = Math.max(1.5, width * 0.045);
-      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
-      context.stroke();
-    } else {
-      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
+  if (isEmerson) {
+    context.fillStyle = "#1a2b4c";
+    context.beginPath();
+    context.ellipse(centerX + width * 0.05, headY - headRadius * 0.7, width * 0.4, height * 0.12, Math.PI / 12, 0, Math.PI * 2);
+    context.fill();
+    context.beginPath();
+    context.arc(centerX + width * 0.2, headY - headRadius * 1.1, width * 0.05, 0, Math.PI * 2);
+    context.fill();
+  } else if (!isRodrigo) {
+    context.fillStyle = palette.shoe;
+    context.beginPath();
+    context.arc(centerX, headY - headRadius * 0.2, headRadius + 2, Math.PI * 0.9, Math.PI * 2.1);
+    context.fill();
+    if (isJuliana || isMyllena || isViviane || isCeli) {
+      drawRoundedRect(centerX - headRadius - 2, headY - height * 0.05, width * 0.15, height * 0.3, width * 0.05);
       context.fill();
-    }
-
-    context.fillStyle = palette.outfitDark;
-    if (!isEmerson) {
-      context.fillRect(width * 0.3, bodyTop, width * 0.12, height * 0.54);
-      context.fillRect(width * 0.58, bodyTop, width * 0.12, height * 0.54);
-    }
-
-    context.fillStyle = palette.detail;
-    if (isGiordano) {
-      context.fillRect(width * 0.2, bodyTop + height * 0.19, width * 0.6, height * 0.08);
-    } else if (isEmerson) {
-      context.fillStyle = "#ff0000";
-      context.fillRect(width * 0.27, bodyTop - height * 0.04, width * 0.46, height * 0.08);
-      context.fillRect(width * 0.56, bodyTop + height * 0.02, width * 0.12, height * 0.2);
-
-      context.fillStyle = "#1f1f24";
-      context.beginPath();
-      context.ellipse(centerX, headY - headRadius * 0.82, width * 0.34, height * 0.075, -0.18, 0, Math.PI * 2);
-      context.fill();
-
-      context.beginPath();
-      context.ellipse(centerX - width * 0.08, headY - headRadius * 0.66, width * 0.24, height * 0.045, -0.08, 0, Math.PI * 2);
-      context.fill();
-    } else {
-      context.beginPath();
-      context.moveTo(centerX, bodyTop + height * 0.08);
-      context.lineTo(centerX - width * 0.08, bodyTop + height * 0.24);
-      context.lineTo(centerX + width * 0.08, bodyTop + height * 0.24);
-      context.closePath();
+      drawRoundedRect(centerX + headRadius - width * 0.15 + 2, headY - height * 0.05, width * 0.15, height * 0.3, width * 0.05);
       context.fill();
     }
   }
-
-  context.fillStyle = "#101317";
-  context.fillRect(centerX - width * 0.15, headY - height * 0.04, width * 0.09, height * 0.06);
-  context.fillRect(centerX + width * 0.08, headY - height * 0.04, width * 0.09, height * 0.06);
-
-  context.fillStyle = palette.shoe;
-  context.fillRect(width * 0.22, bodyBottom, width * 0.18, height * 0.1);
-  context.fillRect(width * 0.6, bodyBottom, width * 0.18, height * 0.1);
 
   context.restore();
 }
@@ -567,14 +753,58 @@ function renderPreviews() {
   });
 }
 
-function addCollectibleScroll(itemId, x, y) {
-  const existsInGlossary = glossarioData.some((entry) => entry.id === itemId);
+function renderStudentPreviews() {
+  const previews = [
+    { id: "student-preview-anderson", name: "Anderson" },
+    { id: "student-preview-rafael", name: "Rafael" },
+    { id: "student-preview-viviane", name: "Viviane" },
+    { id: "student-preview-rodrigo", name: "Rodrigo" },
+    { id: "student-preview-myllena", name: "Myllena" }
+  ];
 
-  if (!existsInGlossary || unlockedScrolls.includes(itemId)) {
+  previews.forEach(({ id, name }) => {
+    const previewCanvas = document.getElementById(id);
+    const previewContext = previewCanvas?.getContext("2d");
+
+    if (!previewContext) {
+      return;
+    }
+
+    previewContext.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    drawCharacter(previewContext, 3, 0, 34, 42, name);
+  });
+}
+
+function addCollectibleScroll(itemId, x, y) {
+  const existsInReferences = referenciasData.some((entry) => entry.id === itemId);
+  const alreadyPlaced = collectibleScrolls.some((scroll) => scroll.itemId === itemId);
+
+  if (!existsInReferences || unlockedScrolls.includes(itemId) || alreadyPlaced) {
     return;
   }
 
   collectibleScrolls.push(new CollectibleScroll(x, y, itemId));
+}
+
+function addReferenceScrollForLevel(level) {
+  const positions = {
+    1: { x: 502, y: 140 },
+    2: { x: 830, y: 162 },
+    3: { x: 568, y: 164 },
+    4: { x: 842, y: 180 },
+    5: { x: 838, y: 170 },
+    6: { x: 468, y: 310 },
+    7: { x: 540, y: 198 },
+    8: { x: 158, y: 450 },
+    9: { x: 612, y: 206 }
+  };
+  const position = positions[level];
+
+  if (!position) {
+    return;
+  }
+
+  addCollectibleScroll(level, position.x, position.y);
 }
 
 function unlockScroll(itemId) {
@@ -586,26 +816,22 @@ function unlockScroll(itemId) {
 function renderGlossary() {
   glossaryContent.innerHTML = "";
 
-  glossarioData.forEach((entry) => {
+  referenciasData.forEach((entry) => {
     const article = document.createElement("article");
     const isUnlocked = unlockedScrolls.includes(entry.id);
     article.className = `glossary-entry${isUnlocked ? "" : " is-locked"}`;
 
     const title = document.createElement("h3");
-    const text = document.createElement("p");
-    text.className = "glossary-text";
 
     if (isUnlocked) {
       const author = document.createElement("p");
       title.textContent = entry.titulo;
       author.className = "glossary-author";
       author.textContent = entry.autor;
-      text.textContent = entry.texto;
-      article.append(title, author, text);
+      article.append(title, author);
     } else {
-      title.textContent = "Item Bloqueado";
-      text.textContent = "Explore as Fases para encontrar.";
-      article.append(title, text);
+      title.textContent = `Refer\u00eancia Bloqueada - Explore a Fase ${entry.id}`;
+      article.append(title);
     }
 
     glossaryContent.appendChild(article);
@@ -672,6 +898,8 @@ const DRONE_KNOCKBACK_X = 440;
 const DRONE_KNOCKBACK_Y = -360;
 const IDLE_QUOTE_DELAY = 4;
 const IDLE_QUOTE_DURATION = 3.5;
+const QUALIFICATION_STUDENT_TEXT = "O momento mais temido chegou: A Banca de Qualifica\u00e7\u00e3o! Cada professor exige um conceito espec\u00edfico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para n\u00e3o errar o autor na frente da banca!";
+const FINAL_DEFENSE_STUDENT_TEXT = "A Defesa Final! A banca est\u00e1 implac\u00e1vel. Sobreviva \u00e0s cr\u00edticas, navegue pelo racioc\u00ednio inst\u00e1vel e entregue os 4 cap\u00edtulos finais da sua pesquisa!";
 
 const keys = new Set();
 let player = null;
@@ -683,7 +911,9 @@ let currentCharacter = null;
 let currentCharacterKey = "emerson";
 let pendingCharacter = null;
 let pendingCharacterKey = "emerson";
+let pendingStudentLevel = 7;
 let glossaryOpenedInGame = false;
+let skipBossCutsceneForTest = false;
 let lastGameResult = null;
 let lastTime = 0;
 let elapsed = 0;
@@ -700,6 +930,13 @@ let playerStart = { x: 36, y: 438 };
 let platforms = [];
 let cookies = [];
 let collectibleScrolls = [];
+let conceptItems = [];
+let professorNPCs = [];
+let iceBlock = null;
+let critiqueProjectiles = [];
+let thesisChapters = [];
+let researchDesk = null;
+let masterDiploma = null;
 let drones = [];
 let vacuums = [];
 let smartSpeakers = [];
@@ -767,35 +1004,112 @@ class Plataforma {
 
   draw(context) {
     const isTechno = this.variant === "techno" || this.variant === "techno-safe";
-    const gradient = context.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
-    const topColor = this.variant === "ground"
-      ? "#343a40"
+    const isFurniture = this.variant === "furniture";
+    const isGround = this.variant === "ground";
+
+    // Pastel / Google Doodle palettes for environments
+    const baseColor = isGround
+      ? "#f4ead7" // pastel sand
       : isTechno
-        ? "#5c66d6"
-        : this.variant === "furniture"
-        ? "#5f6872"
-        : "#4b525b";
-    const bottomColor = this.variant === "ground"
-      ? "#171b20"
+        ? "#ffdca3" // warm pastel techno
+        : isFurniture
+        ? "#d9c5b2" // soft wood
+        : "#c4d8e2"; // soft pastel blueish
+
+    const shadowColor = isGround
+      ? "#e0cdaf"
       : isTechno
-        ? "#2b2365"
-        : this.variant === "furniture"
-        ? "#2f3640"
-        : "#242a31";
-    gradient.addColorStop(0, topColor);
-    gradient.addColorStop(1, bottomColor);
+        ? "#e6b981"
+        : isFurniture
+        ? "#ba9e83"
+        : "#a3bcc9";
 
     context.save();
-    if (isTechno) {
-      context.shadowColor = "rgba(255, 176, 56, 0.78)";
-      context.shadowBlur = 14;
+    
+    // Add soft drop shadow for floating elements
+    if (!isGround) {
+      context.shadowColor = "rgba(0, 0, 0, 0.12)";
+      context.shadowBlur = 12;
+      context.shadowOffsetY = 6;
     }
 
-    context.fillStyle = gradient;
-    context.fillRect(this.x, this.y, this.width, this.height);
+    // Draw main body with rounded corners
+    context.fillStyle = baseColor;
+    context.beginPath();
+    if (typeof roundRect === 'function') {
+      roundRect(context, this.x, this.y, this.width, this.height, isGround ? 0 : 12);
+    } else {
+      context.fillRect(this.x, this.y, this.width, this.height);
+    }
+    context.fill();
 
-    context.fillStyle = isTechno ? "rgba(255, 205, 92, 0.45)" : "rgba(255, 255, 255, 0.18)";
-    context.fillRect(this.x, this.y, this.width, 3);
+    // Reset shadow for details
+    context.shadowColor = "transparent";
+    context.shadowBlur = 0;
+    context.shadowOffsetY = 0;
+
+    // Draw bottom edge to give a slight 3D Flat thickness
+    context.fillStyle = shadowColor;
+    context.beginPath();
+    if (typeof roundRect === 'function' && !isGround) {
+      // Small trick: we can just draw a rounded rect at the bottom and the top overlaps it, 
+      // but since we draw on top it's easier to just clip or overlap. Here we just draw a small rect at the bottom.
+      roundRect(context, this.x, this.y + this.height - 8, this.width, 8, 8);
+    } else {
+      context.fillRect(this.x, this.y + this.height - 8, this.width, 8);
+    }
+    context.fill();
+    
+    // Top highlight line for "juice" and depth
+    context.fillStyle = "rgba(255, 255, 255, 0.4)";
+    context.fillRect(this.x + (isGround ? 0 : 10), this.y + 2, this.width - (isGround ? 0 : 20), 4);
+
+    // Cute glowing dots for techno platforms
+    if (isTechno) {
+      context.fillStyle = "#ffcf4a";
+      for (let i = 15; i < this.width - 15; i += 30) {
+        context.beginPath();
+        context.arc(this.x + i, this.y + this.height / 2 - 2, 4, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+
+    context.restore();
+  }
+}
+
+class MovingPlatform extends Plataforma {
+  constructor(x, y, width, height, options = {}) {
+    super(x, y, width, height, options.variant || "techno-safe");
+    this.startX = x;
+    this.startY = y;
+    this.rangeX = options.rangeX || 0;
+    this.rangeY = options.rangeY || 0;
+    this.speed = options.speed || 1;
+    this.phase = options.phase || 0;
+    this.timer = 0;
+    this.moveX = 0;
+    this.moveY = 0;
+  }
+
+  update(deltaTime) {
+    const previousX = this.x;
+    const previousY = this.y;
+    this.timer += deltaTime * this.speed;
+    this.x = this.startX + Math.sin(this.timer + this.phase) * this.rangeX;
+    this.y = this.startY + Math.sin(this.timer + this.phase) * this.rangeY;
+    this.moveX = this.x - previousX;
+    this.moveY = this.y - previousY;
+  }
+
+  draw(context) {
+    super.draw(context);
+    context.save();
+    context.strokeStyle = "rgba(173, 216, 230, 0.75)";
+    context.lineWidth = 2;
+    context.setLineDash([8, 6]);
+    context.strokeRect(this.startX - this.rangeX, this.startY - this.rangeY, this.width + this.rangeX * 2, this.height + this.rangeY * 2);
+    context.setLineDash([]);
     context.restore();
   }
 }
@@ -842,6 +1156,41 @@ class GlitchPlatform extends Plataforma {
       context.fillRect(this.x + this.width * 0.45, this.y + this.height - 5, this.width * 0.35, 2);
     }
 
+    context.restore();
+  }
+}
+
+class FlickeringPlatform extends Plataforma {
+  constructor(x, y, width, height, activeDuration = 2.4, inactiveDuration = 1.15, phase = 0) {
+    super(x, y, width, height, "techno-safe");
+    this.activeDuration = activeDuration;
+    this.inactiveDuration = inactiveDuration;
+    this.cycleDuration = activeDuration + inactiveDuration;
+    this.timer = phase;
+  }
+
+  get isActive() {
+    return this.timer % this.cycleDuration < this.activeDuration;
+  }
+
+  isSolid() {
+    return this.isActive;
+  }
+
+  update(deltaTime) {
+    this.timer += deltaTime;
+  }
+
+  draw(context) {
+    context.save();
+    context.globalAlpha = this.isActive ? 1 : 0.18;
+    context.shadowColor = this.isActive ? "rgba(255, 207, 74, 0.82)" : "rgba(255, 207, 74, 0.22)";
+    context.shadowBlur = this.isActive ? 16 : 4;
+    context.fillStyle = this.isActive ? "rgba(255, 207, 74, 0.24)" : "rgba(255, 255, 255, 0.08)";
+    context.fillRect(this.x, this.y, this.width, this.height);
+    context.strokeStyle = this.isActive ? "#ffcf4a" : "rgba(255, 207, 74, 0.32)";
+    context.lineWidth = 2;
+    context.strokeRect(this.x, this.y, this.width, this.height);
     context.restore();
   }
 }
@@ -945,6 +1294,302 @@ class CollectibleScroll {
     context.fillRect(this.x + 7, this.y + 6, this.width - 14, 2);
     context.fillRect(this.x + 7, this.y + 11, this.width - 10, 2);
     context.fillRect(this.x + 7, this.y + 16, this.width - 16, 2);
+    context.restore();
+  }
+}
+
+class ConceptItem {
+  constructor(x, y, id, color, name) {
+    this.x = x;
+    this.y = y;
+    this.startX = x;
+    this.startY = y;
+    this.width = 30;
+    this.height = 22;
+    this.id = id;
+    this.color = color;
+    this.name = name;
+    this.collected = false;
+    this.floatTimer = Math.random() * Math.PI * 2;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  resetToStart() {
+    this.x = this.startX;
+    this.y = this.startY;
+    this.collected = false;
+  }
+
+  update(deltaTime) {
+    this.floatTimer += deltaTime * 3;
+  }
+
+  draw(context, x = this.x, y = this.y, scale = 1, forceVisible = false) {
+    if (this.collected && !forceVisible) {
+      return;
+    }
+
+    const bob = Math.sin(this.floatTimer) * 2 * scale;
+    const width = this.width * scale;
+    const height = this.height * scale;
+
+    context.save();
+    context.shadowColor = this.color;
+    context.shadowBlur = 14 * scale;
+    context.fillStyle = this.color;
+    roundRect(context, x, y + bob, width, height, 4 * scale);
+    context.fill();
+
+    context.shadowBlur = 0;
+    context.fillStyle = "rgba(255, 255, 255, 0.72)";
+    context.fillRect(x + width * 0.22, y + bob + height * 0.18, width * 0.1, height * 0.64);
+    context.fillRect(x + width * 0.42, y + bob + height * 0.25, width * 0.42, height * 0.12);
+    context.fillRect(x + width * 0.42, y + bob + height * 0.5, width * 0.34, height * 0.12);
+
+    context.strokeStyle = "rgba(0, 0, 0, 0.36)";
+    context.lineWidth = Math.max(1, 1.5 * scale);
+    roundRect(context, x, y + bob, width, height, 4 * scale);
+    context.stroke();
+    context.restore();
+  }
+}
+
+class ThesisChapter extends ConceptItem {
+  constructor(x, y, id, name) {
+    const colors = ["#ffcf4a", "#7cc7ff", "#ff7a7a", "#c23bff"];
+    super(x, y, id, colors[(id - 1) % colors.length], name);
+    this.width = 32;
+    this.height = 24;
+  }
+}
+
+class CritiqueProjectile {
+  constructor(x, y, vx, vy) {
+    this.x = x;
+    this.y = y;
+    this.radius = 7;
+    this.vx = vx;
+    this.vy = vy;
+    this.active = true;
+  }
+
+  get bounds() {
+    return {
+      x: this.x - this.radius,
+      y: this.y - this.radius,
+      width: this.radius * 2,
+      height: this.radius * 2
+    };
+  }
+
+  update(deltaTime) {
+    this.x += this.vx * deltaTime;
+    this.y += this.vy * deltaTime;
+
+    if (this.x < -40 || this.x > WIDTH + 40 || this.y < -40 || this.y > HEIGHT + 80) {
+      this.active = false;
+    }
+  }
+
+  draw(context) {
+    if (!this.active) {
+      return;
+    }
+
+    context.save();
+    context.shadowColor = "rgba(255, 64, 64, 0.9)";
+    context.shadowBlur = 14;
+    context.fillStyle = "#ff4040";
+    context.beginPath();
+    context.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    context.fill();
+    context.shadowBlur = 0;
+    context.fillStyle = "#ffffff";
+    context.font = "700 10px Inter, Segoe UI, Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("?", this.x, this.y + 0.5);
+    context.restore();
+  }
+}
+
+class ResearchDesk {
+  constructor(x, y, width = 132, height = 34) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.deliveredCount = 0;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  draw(context) {
+    context.save();
+    context.fillStyle = "#6d4c32";
+    roundRect(context, this.x, this.y, this.width, this.height, 6);
+    context.fill();
+    context.fillStyle = "#d8b17d";
+    context.fillRect(this.x + 10, this.y + 8, this.width - 20, 5);
+    context.fillStyle = "#f5f7fb";
+    context.font = "700 10px Inter, Segoe UI, Arial";
+    context.textAlign = "center";
+    context.fillText(`Capitulos: ${this.deliveredCount}/4`, this.x + this.width / 2, this.y + 24);
+    context.restore();
+  }
+}
+
+class MasterDiploma {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 54;
+    this.height = 36;
+    this.pulse = 0;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  update(deltaTime) {
+    this.pulse += deltaTime * 4;
+  }
+
+  draw(context) {
+    const bob = Math.sin(this.pulse) * 3;
+    context.save();
+    context.shadowColor = "rgba(255, 207, 74, 0.85)";
+    context.shadowBlur = 22;
+    context.fillStyle = "#fff4cf";
+    roundRect(context, this.x, this.y + bob, this.width, this.height, 8);
+    context.fill();
+    context.shadowBlur = 0;
+    context.strokeStyle = "#b68a23";
+    context.lineWidth = 2;
+    roundRect(context, this.x, this.y + bob, this.width, this.height, 8);
+    context.stroke();
+    context.fillStyle = "#d62020";
+    context.fillRect(this.x + this.width / 2 - 4, this.y + bob, 8, this.height);
+    context.beginPath();
+    context.arc(this.x + this.width / 2, this.y + bob + this.height / 2, 8, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+}
+
+class ProfessorNPC {
+  constructor(x, y, characterName, requiredConceptId, options = {}) {
+    this.x = x;
+    this.y = y;
+    this.width = 34;
+    this.height = 54;
+    this.characterName = characterName;
+    this.requiredConceptId = requiredConceptId;
+    this.isSatisfied = false;
+    this.shootsCritiques = options.shootsCritiques || false;
+    this.projectileDirection = options.projectileDirection || 1;
+    this.projectileCooldown = options.projectileCooldown || 2.4;
+    this.projectileTimer = options.initialDelay || Math.random() * this.projectileCooldown;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  update(deltaTime) {
+    if (!this.shootsCritiques || gameEnded) {
+      return;
+    }
+
+    this.projectileTimer -= deltaTime;
+
+    if (this.projectileTimer > 0) {
+      return;
+    }
+
+    this.projectileTimer = this.projectileCooldown;
+    const startX = this.x + this.width / 2;
+    const startY = this.y + 18;
+    const vx = this.projectileDirection * (145 + Math.random() * 45);
+    const vy = 38 + Math.random() * 38;
+    critiqueProjectiles.push(new CritiqueProjectile(startX, startY, vx, vy));
+  }
+
+  draw(context) {
+    context.save();
+    context.globalAlpha = this.isSatisfied ? 0.92 : 1;
+    drawCharacter(context, this.x, this.y, this.width, this.height, this.characterName);
+    context.restore();
+
+    if (this.isSatisfied) {
+      context.save();
+      context.fillStyle = "#48d17c";
+      context.strokeStyle = "#0a3d21";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.arc(this.x + this.width / 2, this.y - 9, 10, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+      context.strokeStyle = "#ffffff";
+      context.lineWidth = 3;
+      context.beginPath();
+      context.moveTo(this.x + this.width / 2 - 5, this.y - 9);
+      context.lineTo(this.x + this.width / 2 - 1, this.y - 5);
+      context.lineTo(this.x + this.width / 2 + 6, this.y - 13);
+      context.stroke();
+      context.restore();
+    }
+
+    this.drawNameLabel(context);
+  }
+
+  drawNameLabel(context) {
+    const label = this.characterName;
+    const labelY = Math.min(HEIGHT - 10, this.y + this.height + 14);
+
+    context.save();
+    context.font = "700 10px Inter, Segoe UI, Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+
+    const labelWidth = Math.min(88, context.measureText(label).width + 12);
+    const labelX = clamp(this.x + this.width / 2 - labelWidth / 2, 6, WIDTH - labelWidth - 6);
+
+    context.fillStyle = "rgba(8, 10, 14, 0.78)";
+    context.strokeStyle = this.isSatisfied ? "rgba(72, 209, 124, 0.78)" : "rgba(255, 207, 74, 0.42)";
+    context.lineWidth = 1;
+    roundRect(context, labelX, labelY - 9, labelWidth, 18, 6);
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = this.isSatisfied ? "#b8ffd1" : "#f5f7fb";
+    context.fillText(label, labelX + labelWidth / 2, labelY);
     context.restore();
   }
 }
@@ -1602,6 +2247,112 @@ class ExitDoor {
   }
 }
 
+class IceBlock {
+  constructor(x, y, size = 60) {
+    this.x = x;
+    this.y = y;
+    this.width = size;
+    this.height = size;
+    this.vx = 0;
+    this.vy = 0;
+    this.color = "rgba(173, 216, 230, 0.8)";
+    this.meltRate = 4.4;
+    this.grounded = false;
+    this.supportPlatform = null;
+  }
+
+  update(deltaTime) {
+    this.width = Math.max(0, this.width - this.meltRate * deltaTime);
+    this.height = Math.max(0, this.height - this.meltRate * deltaTime);
+    this.vy += PHYSICS.gravity * deltaTime;
+
+    if (this.supportPlatform instanceof MovingPlatform) {
+      this.x += this.supportPlatform.moveX;
+      this.y += this.supportPlatform.moveY;
+    }
+
+    const previousX = this.x;
+    this.x += this.vx * deltaTime;
+    this.resolveHorizontalCollisions(previousX);
+    this.x = clamp(this.x, 0, WIDTH - this.width);
+
+    const previousY = this.y;
+    this.y += this.vy * deltaTime;
+    this.resolveVerticalCollisions(previousY);
+    this.vx *= this.grounded ? 0.82 : 0.96;
+  }
+
+  resolveHorizontalCollisions(previousX) {
+    for (const platform of platforms) {
+      if (!platform.isSolid() || !rectsOverlap(this, platform)) {
+        continue;
+      }
+
+      const previousRight = previousX + this.width;
+
+      if (previousRight <= platform.x) {
+        this.x = platform.x - this.width;
+      } else if (previousX >= platform.x + platform.width) {
+        this.x = platform.x + platform.width;
+      }
+
+      this.vx = 0;
+    }
+  }
+
+  resolveVerticalCollisions(previousY) {
+    this.grounded = false;
+    this.supportPlatform = null;
+
+    for (const platform of platforms) {
+      if (!platform.isSolid() || !rectsOverlap(this, platform)) {
+        continue;
+      }
+
+      const previousBottom = previousY + this.height;
+      const previousTop = previousY;
+
+      if (previousBottom <= platform.y) {
+        this.y = platform.y - this.height;
+        this.vy = 0;
+        this.grounded = true;
+        this.supportPlatform = platform;
+      } else if (previousTop >= platform.y + platform.height) {
+        this.y = platform.y + platform.height;
+        this.vy = 0;
+      }
+    }
+  }
+
+  isMelted() {
+    return this.width <= 5 || this.height <= 5;
+  }
+
+  isLost() {
+    return this.y > HEIGHT + 40 || this.x + this.width < -20 || this.x > WIDTH + 20;
+  }
+
+  draw(context) {
+    context.save();
+    context.shadowColor = "rgba(173, 216, 230, 0.72)";
+    context.shadowBlur = 18;
+    context.fillStyle = this.color;
+    roundRect(context, this.x, this.y, this.width, this.height, 8);
+    context.fill();
+
+    context.shadowBlur = 0;
+    context.strokeStyle = "rgba(230, 248, 255, 0.9)";
+    context.lineWidth = 2;
+    roundRect(context, this.x, this.y, this.width, this.height, 8);
+    context.stroke();
+
+    context.fillStyle = "rgba(255, 255, 255, 0.5)";
+    context.fillRect(this.x + this.width * 0.18, this.y + this.height * 0.2, this.width * 0.34, Math.max(2, this.height * 0.06));
+    context.fillRect(this.x + this.width * 0.2, this.y + this.height * 0.34, this.width * 0.18, Math.max(2, this.height * 0.05));
+    context.restore();
+  }
+}
+
 class Player {
   constructor(character) {
     this.character = character;
@@ -1616,6 +2367,8 @@ class Player {
     this.coyoteTimer = 0;
     this.jumpBufferTimer = 0;
     this.invulnerabilityTimer = 0;
+    this.carriedConcept = null;
+    this.carriedChapter = null;
   }
 
   get left() {
@@ -1760,12 +2513,34 @@ class Player {
     context.save();
     context.globalAlpha = this.isInvulnerable() && Math.floor(elapsed * 18) % 2 === 0 ? 0.35 : 1;
     drawCharacter(context, this.x, this.y, this.width, this.height, this.character.name);
+
+    if (this.carriedConcept) {
+      this.carriedConcept.draw(
+        context,
+        this.x + this.width / 2 - 11,
+        this.y - 28,
+        0.74,
+        true
+      );
+    }
+
+    if (this.carriedChapter) {
+      this.carriedChapter.draw(
+        context,
+        this.x + this.width / 2 - 12,
+        this.y - 30,
+        0.78,
+        true
+      );
+    }
+
     context.restore();
   }
 }
 
 loadLevel(currentLevel);
 renderPreviews();
+renderStudentPreviews();
 
 glossaryButton.addEventListener("click", () => {
   openGlossary(false);
@@ -1774,6 +2549,26 @@ glossaryButton.addEventListener("click", () => {
 inGameGlossaryButton.addEventListener("click", () => {
   openGlossary(true);
 });
+
+if (fullscreenButton) {
+  fullscreenButton.addEventListener("click", () => {
+    if (!document.fullscreenElement) {
+      document.querySelector(".game-shell").requestFullscreen().catch(err => {
+        console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    if (document.fullscreenElement) {
+      fullscreenButton.innerText = "✖ Sair da Tela Cheia";
+    } else {
+      fullscreenButton.innerText = "⛶ Tela Cheia";
+    }
+  });
+}
 
 glossaryCloseButton.addEventListener("click", () => {
   closeGlossary();
@@ -1784,6 +2579,12 @@ document.querySelectorAll("[data-character]").forEach((button) => {
     const selectedKey = button.dataset.character;
     const selected = CHARACTERS[button.dataset.character];
     showTermsModal(selected, selectedKey);
+  });
+});
+
+document.querySelectorAll("[data-student]").forEach((button) => {
+  button.addEventListener("click", () => {
+    startQualificationWithStudent(button.dataset.student);
   });
 });
 
@@ -1809,6 +2610,12 @@ nextPhaseButton.addEventListener("click", () => {
       currentLevel = 5;
     } else if (currentLevel === 5) {
       currentLevel = 6;
+    } else if (currentLevel === 6) {
+      currentLevel = 7;
+    } else if (currentLevel === 7) {
+      currentLevel = 8;
+    } else if (currentLevel === 8) {
+      currentLevel = 9;
     }
   }
 
@@ -1817,6 +2624,14 @@ nextPhaseButton.addEventListener("click", () => {
 
 retryButton.addEventListener("click", () => {
   restartLevel();
+});
+
+journeyRestartButton.addEventListener("click", () => {
+  window.location.href = window.location.pathname;
+});
+
+creditsButton.addEventListener("click", () => {
+  alert("Creditos: jogo-prototipo academico inspirado nas discussoes sobre trabalho, educacao, controle e tecnoestetica do Programa de Disciplina.");
 });
 
 cutsceneNextButton.addEventListener("click", () => {
@@ -1828,6 +2643,8 @@ cutsceneUI.addEventListener("click", (event) => {
     advanceCutscene();
   }
 });
+
+startDirectlyFromQuery();
 
 window.addEventListener("keydown", (event) => {
   const normalized = normalizeKey(event.key);
@@ -1879,39 +2696,42 @@ function loadLevel(level) {
   platforms = [];
   cookies = [];
   collectibleScrolls = [];
+  conceptItems = [];
+  professorNPCs = [];
+  critiqueProjectiles = [];
+  thesisChapters = [];
   drones = [];
   vacuums = [];
   smartSpeakers = [];
   books = [];
   allyNPC = null;
   bossCamera = null;
+  exitDoor = null;
+  iceBlock = null;
+  researchDesk = null;
+  masterDiploma = null;
 
-  if (level === 6) {
+  if (level === 9) {
+    loadFinalDefenseLevel();
+  } else if (level === 8) {
+    loadPraxisIceLevel();
+  } else if (level === 7) {
+    loadQualificationBoardLevel();
+  } else if (level === 6) {
     loadBossFightLevel();
-    return;
-  }
-
-  if (level === 5) {
+  } else if (level === 5) {
     loadTechnoAestheticLevel();
-    return;
-  }
-
-  if (level === 4) {
+  } else if (level === 4) {
     loadTechnicalCultureLevel();
-    return;
-  }
-
-  if (level === 3) {
+  } else if (level === 3) {
     loadBehavioralFuturesLevel();
-    return;
-  }
-
-  if (level === 2) {
+  } else if (level === 2) {
     loadSmartHomeLevel();
-    return;
+  } else {
+    loadFeedValleyLevel();
   }
 
-  loadFeedValleyLevel();
+  addReferenceScrollForLevel(currentLevel);
 }
 
 function loadFeedValleyLevel() {
@@ -1945,7 +2765,6 @@ function loadFeedValleyLevel() {
     new Drone(platforms[6], 28, 64, 1)
   ];
 
-  addCollectibleScroll(1, 502, 140);
   configureExitDoorForCurrentLevel();
 }
 
@@ -1986,7 +2805,6 @@ function loadSmartHomeLevel() {
     new SmartSpeaker(558, 206, 24, 84, 2.2)
   ];
 
-  addCollectibleScroll(2, 830, 162);
   configureExitDoorForCurrentLevel();
 }
 
@@ -2026,7 +2844,6 @@ function loadBehavioralFuturesLevel() {
     new VacuumRobot(platforms[0], 620, 72, -1, 250)
   ];
 
-  addCollectibleScroll(3, 568, 164);
   configureExitDoorForCurrentLevel();
 }
 
@@ -2072,7 +2889,6 @@ function loadTechnicalCultureLevel() {
   ];
 
   allyNPC = new AllyNPC(92, 438);
-  addCollectibleScroll(4, 842, 180);
   configureExitDoorForCurrentLevel();
 }
 
@@ -2082,35 +2898,41 @@ function loadTechnoAestheticLevel() {
   playerStart = { x: 34, y: 438 };
 
   platforms = [
-    // Mesma estrutura da Fase 4: zonas seguras e ritmo equivalente.
+    // Fase 5: ritmo mais exigente, com menos zonas longas e mais pressao.
     new Plataforma(0, 492, 960, 48, "ground"),
-    new Plataforma(118, 420, 170, 22, "techno"),
-    new Plataforma(338, 362, 292, 22, "techno-safe"),
-    new Plataforma(720, 402, 136, 22, "techno"),
-    new Plataforma(168, 294, 230, 22, "techno-safe"),
-    new Plataforma(494, 240, 260, 22, "techno-safe"),
-    new Plataforma(806, 190, 126, 22, "techno")
+    new Plataforma(112, 420, 142, 22, "techno"),
+    new Plataforma(324, 366, 210, 22, "techno-safe"),
+    new Plataforma(690, 410, 118, 22, "techno"),
+    new Plataforma(154, 292, 170, 22, "techno"),
+    new Plataforma(444, 246, 188, 22, "techno-safe"),
+    new Plataforma(792, 202, 116, 22, "techno")
   ];
 
   cookies = [
-    new Cookie(206, 388),
-    new Cookie(548, 330),
-    new Cookie(860, 158),
-    new Cookie(888, 458)
+    new Cookie(182, 388),
+    new Cookie(418, 334),
+    new Cookie(505, 214),
+    new Cookie(848, 170),
+    new Cookie(742, 378),
+    new Cookie(890, 458)
   ];
 
   drones = [
-    new Drone(platforms[5], 36, 72, -1)
+    new Drone(platforms[4], 24, 82, 1),
+    new Drone(platforms[5], 30, 84, -1),
+    new Drone(platforms[6], 20, 64, 1)
   ];
 
   vacuums = [
     new VacuumRobot(platforms[3], 36, 54, 1),
-    new VacuumRobot(platforms[0], 600, 62, -1, 250)
+    new VacuumRobot(platforms[0], 470, 70, -1, 300),
+    new VacuumRobot(platforms[0], 740, 58, 1, 150)
   ];
 
   smartSpeakers = [
-    new SmartSpeaker(224, 254, 24, 78, 0.8),
-    new SmartSpeaker(592, 200, 22, 84, 2.4)
+    new SmartSpeaker(220, 252, 24, 88, 0.8),
+    new SmartSpeaker(538, 206, 22, 92, 2.4),
+    new SmartSpeaker(850, 162, 22, 78, 1.6)
   ];
 
   allyNPC = new AllyNPC(92, 438, {
@@ -2154,7 +2976,113 @@ function loadBossFightLevel() {
 
   bossCamera = new BossCamera(WIDTH / 2 - 58, 34);
   configureExitDoorForCurrentLevel();
-  prepareBossCutscene(helperKey);
+
+  if (!skipBossCutsceneForTest) {
+    prepareBossCutscene(helperKey);
+  }
+}
+
+function loadQualificationBoardLevel() {
+  currentLevel = 7;
+  levelTitle = "BANCA DE QUALIFICACAO";
+  playerStart = { x: 44, y: 438 };
+
+  platforms = [
+    new Plataforma(0, 492, 960, 48, "techno-safe"),
+    new Plataforma(94, 396, 210, 22, "furniture"),
+    new Plataforma(378, 356, 210, 22, "techno-safe"),
+    new Plataforma(666, 396, 210, 22, "furniture"),
+    new Plataforma(138, 268, 190, 22, "furniture"),
+    new Plataforma(410, 230, 190, 22, "techno-safe"),
+    new Plataforma(692, 268, 190, 22, "furniture")
+  ];
+
+  conceptItems = [
+    new ConceptItem(178, 236, 1, "#f4d35e", "Epistemologia"),
+    new ConceptItem(736, 236, 2, "#7cc7ff", "O Qui-quadrado"),
+    new ConceptItem(446, 198, 3, "#ff7a7a", "Sociedade de Controle"),
+    new ConceptItem(484, 324, 4, "#c23bff", "Tecnoestetica")
+  ];
+
+  professorNPCs = [
+    new ProfessorNPC(128, 342, "Prof. Celi", 1),
+    new ProfessorNPC(724, 342, "Prof. Giordano", 2),
+    new ProfessorNPC(194, 438, "Prof. Juliana", 3),
+    new ProfessorNPC(790, 438, "Prof. Emerson", 4)
+  ];
+}
+
+function loadPraxisIceLevel() {
+  currentLevel = 8;
+  levelTitle = "PARODIA DA PRAXIS";
+  playerStart = { x: 42, y: 438 };
+
+  platforms = [
+    new Plataforma(0, 492, 230, 48, "ground"),
+    new MovingPlatform(280, 492, 178, 22, { rangeX: 74, speed: 1.15, variant: "techno-safe" }),
+    new Plataforma(486, 492, 154, 48, "furniture"),
+    new MovingPlatform(682, 492, 178, 22, { rangeX: 70, speed: 1.05, phase: Math.PI / 2, variant: "techno-safe" }),
+    new Plataforma(826, 492, 134, 48, "ground")
+  ];
+
+  iceBlock = new IceBlock(96, 432, 60);
+  exitDoor = new ExitDoor(900, 418, 44, 74);
+}
+
+function loadFinalDefenseLevel() {
+  currentLevel = 9;
+  levelTitle = "DEFESA FINAL";
+  playerStart = { x: 42, y: 438 };
+
+  platforms = [
+    new Plataforma(0, 492, 960, 48, "ground"),
+    new Plataforma(374, 444, 212, 22, "techno-safe"),
+    new FlickeringPlatform(116, 410, 150, 18, 2.35, 1.05, 0),
+    new FlickeringPlatform(326, 356, 150, 18, 2.1, 1.1, 1.1),
+    new FlickeringPlatform(610, 360, 142, 18, 2.25, 1.05, 0.55),
+    new FlickeringPlatform(742, 282, 140, 18, 2.05, 1.15, 1.45),
+    new FlickeringPlatform(498, 238, 150, 18, 2.3, 1.05, 0.25),
+    new FlickeringPlatform(214, 262, 142, 18, 2.15, 1.2, 1.7)
+  ];
+
+  thesisChapters = [
+    new ThesisChapter(174, 378, 1, "Capitulo 1"),
+    new ThesisChapter(370, 324, 2, "Capitulo 2"),
+    new ThesisChapter(792, 250, 3, "Capitulo 3"),
+    new ThesisChapter(542, 206, 4, "Capitulo 4")
+  ];
+
+  researchDesk = new ResearchDesk(WIDTH / 2 - 66, 410);
+
+  professorNPCs = [
+    new ProfessorNPC(96, 438, "Prof. Celi", 0, {
+      shootsCritiques: true,
+      projectileDirection: 1,
+      projectileCooldown: 2.25,
+      initialDelay: 0.8
+    }),
+    new ProfessorNPC(268, 438, "Prof. Giordano", 0, {
+      shootsCritiques: true,
+      projectileDirection: 1,
+      projectileCooldown: 2.55,
+      initialDelay: 1.4
+    }),
+    new ProfessorNPC(690, 438, "Prof. Juliana", 0, {
+      shootsCritiques: true,
+      projectileDirection: -1,
+      projectileCooldown: 2.15,
+      initialDelay: 0.35
+    }),
+    new ProfessorNPC(842, 438, "Prof. Emerson", 0, {
+      shootsCritiques: true,
+      projectileDirection: -1,
+      projectileCooldown: 2.7,
+      initialDelay: 1.1
+    })
+  ];
+
+  exitDoor = null;
+  masterDiploma = null;
 }
 
 function configureExitDoorForCurrentLevel() {
@@ -2286,6 +3214,85 @@ function acceptTermsAndStart() {
   startGame(character, characterKey);
 }
 
+function showStudentSelectionScreen(targetLevel = 7, instructionText = QUALIFICATION_STUDENT_TEXT, title = "Banca de Qualifica\u00e7\u00e3o") {
+  hideEndOverlays();
+  pendingStudentLevel = targetLevel;
+  studentSelectionTitle.innerText = title;
+  studentInstructionText.innerText = instructionText;
+  renderStudentPreviews();
+  studentSelectionScreen.style.display = "flex";
+  const firstStudentButton = studentSelectionScreen.querySelector("[data-student]");
+
+  if (firstStudentButton) {
+    firstStudentButton.focus();
+  }
+}
+
+function startQualificationWithStudent(studentKey) {
+  const student = CHARACTERS[studentKey];
+
+  if (!student) {
+    return;
+  }
+
+  currentCharacter = student;
+  currentCharacterKey = studentKey;
+  currentLevel = pendingStudentLevel;
+  studentSelectionScreen.style.display = "none";
+  resetLevelState(student);
+  setInGameGlossaryVisible(true);
+  canvas.focus();
+  startGameLoop();
+}
+
+function getRequestedTestLevel() {
+  const params = new URLSearchParams(window.location.search);
+  const level = Number(params.get("fase"));
+
+  if (!Number.isInteger(level) || level < 1 || level > 9) {
+    return null;
+  }
+
+  const requestedCharacterKey = params.get("personagem") || params.get("aluno") || "";
+  return {
+    level,
+    characterKey: normalizeCharacterKeyForLevel(level, requestedCharacterKey)
+  };
+}
+
+function normalizeCharacterKeyForLevel(level, requestedKey) {
+  const normalizedKey = normalizeCharacterName(requestedKey).replace(/[^a-z0-9]/g, "");
+
+  if (level === 7 || level === 9) {
+    return CHARACTERS[normalizedKey] ? normalizedKey : "anderson";
+  }
+
+  return normalizedKey === "juliana" ? "juliana" : "emerson";
+}
+
+function startDirectlyFromQuery() {
+  const request = getRequestedTestLevel();
+
+  if (!request) {
+    return false;
+  }
+
+  const character = CHARACTERS[request.characterKey];
+  skipBossCutsceneForTest = request.level === 6;
+  currentCharacter = character;
+  currentCharacterKey = request.characterKey;
+  currentLevel = request.level;
+  characterSelect.classList.add("is-hidden");
+  termsModal.style.display = "none";
+  studentSelectionScreen.style.display = "none";
+  resetLevelState(character);
+  skipBossCutsceneForTest = false;
+  setInGameGlossaryVisible(true);
+  canvas.focus();
+  startGameLoop();
+  return true;
+}
+
 function startGame(character, characterKey = "emerson") {
   audioManager.init();
   currentCharacter = character;
@@ -2316,6 +3323,7 @@ function resetLevelState(character) {
   cutsceneUI.style.display = "none";
   glossaryOpenedInGame = false;
   glossaryModal.style.display = "none";
+  studentSelectionScreen.style.display = "none";
   loadLevel(currentLevel);
   player = new Player(character);
   gameEnded = false;
@@ -2395,7 +3403,25 @@ function update(deltaTime) {
 
   player.update(deltaTime);
   updateIdleQuote(deltaTime);
-  exitDoor.update(deltaTime);
+
+  if (exitDoor) {
+    exitDoor.update(deltaTime);
+  }
+
+  if (iceBlock) {
+    iceBlock.update(deltaTime);
+    handleIceBlockPush(deltaTime);
+
+    if (iceBlock.isLost()) {
+      finishGame("defeat", "O gelo caiu no precipicio. A praxis se perdeu no caminho.");
+      return;
+    }
+
+    if (iceBlock.isMelted()) {
+      finishGame("defeat", "O gelo derreteu. Todo o seu esforco foi em vao.");
+      return;
+    }
+  }
 
   for (const drone of drones) {
     drone.update(deltaTime);
@@ -2423,6 +3449,20 @@ function update(deltaTime) {
 
   books = books.filter((book) => book.active);
 
+  for (const professor of professorNPCs) {
+    professor.update(deltaTime);
+  }
+
+  for (const projectile of critiqueProjectiles) {
+    projectile.update(deltaTime);
+
+    if (projectile.active && !player.isInvulnerable() && rectsOverlap(player, projectile.bounds)) {
+      applyCritiqueProjectilePenalty(projectile);
+    }
+  }
+
+  critiqueProjectiles = critiqueProjectiles.filter((projectile) => projectile.active);
+
   for (const scroll of collectibleScrolls) {
     scroll.update(deltaTime);
 
@@ -2430,10 +3470,53 @@ function update(deltaTime) {
       scroll.collected = true;
       unlockScroll(scroll.itemId);
       audioManager.playWin();
-      statusMessage = "Pergaminho academico desbloqueado";
+      statusMessage = "Referencia bibliografica desbloqueada";
       statusTimer = 1.8;
     }
   }
+
+  for (const concept of conceptItems) {
+    concept.update(deltaTime);
+
+    if (!concept.collected && !player.carriedConcept && rectsOverlap(player, concept.bounds)) {
+      concept.collected = true;
+      player.carriedConcept = concept;
+      audioManager.playWin();
+      statusMessage = `Conhecimento coletado: ${concept.name}`;
+      statusTimer = 1.8;
+    }
+  }
+
+  for (const chapter of thesisChapters) {
+    chapter.update(deltaTime);
+
+    if (!chapter.collected && !player.carriedChapter && rectsOverlap(player, chapter.bounds)) {
+      chapter.collected = true;
+      player.carriedChapter = chapter;
+      audioManager.playWin();
+      statusMessage = `Capitulo coletado: ${chapter.name}`;
+      statusTimer = 1.8;
+    }
+  }
+
+  updateFinalDefensePuzzle();
+
+  if (masterDiploma) {
+    masterDiploma.update(deltaTime);
+
+    if (rectsOverlap(player, masterDiploma.bounds)) {
+      finishGraduation();
+      return;
+    }
+  }
+
+  for (const professor of professorNPCs) {
+    if (!professor.isSatisfied && rectsOverlap(player, professor.bounds)) {
+      handleProfessorDelivery(professor);
+    }
+  }
+
+  updateQualificationExit();
 
   for (const cookie of cookies) {
     cookie.update(deltaTime);
@@ -2472,7 +3555,12 @@ function update(deltaTime) {
     return;
   }
 
-  if (rectsOverlap(player, exitDoor) && privacy > 0) {
+  if (currentLevel === 8 && exitDoor && iceBlock && rectsOverlap(player, exitDoor) && rectsOverlap(iceBlock, exitDoor)) {
+    finishGame("victory");
+    return;
+  }
+
+  if (currentLevel !== 8 && exitDoor && rectsOverlap(player, exitDoor) && privacy > 0) {
     finishGame("victory");
     return;
   }
@@ -2495,7 +3583,29 @@ function draw() {
     platform.draw(ctx);
   }
 
-  exitDoor.draw(ctx);
+  for (const concept of conceptItems) {
+    concept.draw(ctx);
+  }
+
+  for (const chapter of thesisChapters) {
+    chapter.draw(ctx);
+  }
+
+  if (researchDesk) {
+    researchDesk.draw(ctx);
+  }
+
+  if (exitDoor) {
+    exitDoor.draw(ctx);
+  }
+
+  if (masterDiploma) {
+    masterDiploma.draw(ctx);
+  }
+
+  if (iceBlock) {
+    iceBlock.draw(ctx);
+  }
 
   for (const drone of drones) {
     drone.draw(ctx);
@@ -2517,13 +3627,23 @@ function draw() {
     book.draw(ctx);
   }
 
+  for (const projectile of critiqueProjectiles) {
+    projectile.draw(ctx);
+  }
+
   if (allyNPC) {
     allyNPC.draw(ctx);
   }
 
+  for (const professor of professorNPCs) {
+    professor.draw(ctx);
+  }
+
   if (player) {
     player.draw(ctx);
-    drawIdleQuoteBubble(ctx);
+    if (currentLevel !== 7 && currentLevel !== 9) {
+      drawIdleQuoteBubble(ctx);
+    }
   }
 
   drawHud();
@@ -2540,6 +3660,97 @@ function applyDronePenalty(enemy, message = "Drone de vigilancia detectou voce")
 function applyPrivacyDamage(amount) {
   privacy = clamp(privacy - amount, 0, 100);
   nivelDeRastreamento = 100 - privacy;
+}
+
+function handleIceBlockPush(deltaTime) {
+  if (!iceBlock || !rectsOverlap(player, iceBlock) || Math.abs(player.vx) < 20) {
+    return;
+  }
+
+  const playerCenter = player.x + player.width / 2;
+  const blockCenter = iceBlock.x + iceBlock.width / 2;
+  const pushDirection = playerCenter < blockCenter ? 1 : -1;
+
+  if (Math.sign(player.vx) !== pushDirection) {
+    return;
+  }
+
+  iceBlock.x += player.vx * deltaTime * 0.78;
+  iceBlock.vx = player.vx * 0.72;
+}
+
+function handleProfessorDelivery(professor) {
+  if (!player.carriedConcept) {
+    return;
+  }
+
+  if (player.carriedConcept.id === professor.requiredConceptId) {
+    professor.isSatisfied = true;
+    player.carriedConcept = null;
+    audioManager.playWin();
+    statusMessage = "Conceito aceito pela banca";
+    statusTimer = 1.8;
+    return;
+  }
+
+  player.carriedConcept.resetToStart();
+  player.carriedConcept = null;
+  audioManager.playCollision();
+  statusMessage = "Conceito incorreto para este professor!";
+  statusTimer = 1.8;
+}
+
+function updateFinalDefensePuzzle() {
+  if (currentLevel !== 9 || !researchDesk || !player.carriedChapter) {
+    return;
+  }
+
+  if (!rectsOverlap(player, researchDesk.bounds)) {
+    return;
+  }
+
+  researchDesk.deliveredCount += 1;
+  player.carriedChapter = null;
+  audioManager.playWin();
+  statusMessage = `Capitulo entregue: ${researchDesk.deliveredCount}/4`;
+  statusTimer = 1.8;
+
+  if (researchDesk.deliveredCount >= 4 && !masterDiploma) {
+    masterDiploma = new MasterDiploma(WIDTH / 2 - 27, HEIGHT / 2 - 18);
+    statusMessage = "Defesa aprovada: pegue o diploma!";
+    statusTimer = 2.4;
+  }
+}
+
+function applyCritiqueProjectilePenalty(projectile) {
+  projectile.active = false;
+  audioManager.playCollision();
+
+  const direction = Math.sign(projectile.vx) || (player.x < projectile.x ? -1 : 1);
+  player.vx = direction * 420;
+  player.vy = -320;
+  player.grounded = false;
+  player.invulnerabilityTimer = 0.9;
+
+  statusMessage = "Critica da banca: reorganize seu argumento!";
+  statusTimer = 1.4;
+}
+
+function updateQualificationExit() {
+  if (currentLevel !== 7 || exitDoor || professorNPCs.length === 0) {
+    return;
+  }
+
+  const boardIsSatisfied = professorNPCs.every((professor) => professor.isSatisfied);
+
+  if (!boardIsSatisfied) {
+    return;
+  }
+
+  exitDoor = new ExitDoor(WIDTH / 2 - 22, 282, 44, 74);
+  audioManager.playWin();
+  statusMessage = "Banca satisfeita: portal de aprovacao aberto";
+  statusTimer = 2.2;
 }
 
 function getRandomQuote(array) {
@@ -2561,7 +3772,7 @@ function updateEndQuote(result) {
   authorElement.innerText = quote.author;
 }
 
-function finishGame(result) {
+function finishGame(result, customDefeatMessage = "") {
   gameEnded = true;
   lastGameResult = result;
   audioManager.stopBGM();
@@ -2571,6 +3782,17 @@ function finishGame(result) {
 
   if (result === "victory") {
     audioManager.playWin();
+
+    if (currentLevel === 6) {
+      showStudentSelectionScreen(7, QUALIFICATION_STUDENT_TEXT, "Banca de Qualifica\u00e7\u00e3o");
+      return;
+    }
+
+    if (currentLevel === 8) {
+      showStudentSelectionScreen(9, FINAL_DEFENSE_STUDENT_TEXT, "Defesa Final");
+      return;
+    }
+
     updateEndQuote("victory");
     victoryOverlay.style.display = "flex";
     nextPhaseButton.focus();
@@ -2578,13 +3800,33 @@ function finishGame(result) {
   }
 
   updateEndQuote("defeat");
+  defeatTitle.innerText = customDefeatMessage || "Game Over: Dados Completamente Extraidos";
   defeatOverlay.style.display = "flex";
   retryButton.focus();
+}
+
+function finishGraduation() {
+  if (gameEnded) {
+    return;
+  }
+
+  gameEnded = true;
+  lastGameResult = "graduation";
+  audioManager.stopBGM();
+  setInGameGlossaryVisible(false);
+  pauseGameLoop();
+
+  const studentName = currentCharacter?.name || "ORIENTANDO";
+  graduationText.innerText = `O Programa de P\u00f3s-gradua\u00e7\u00e3o concede a ${studentName} o t\u00edtulo de Mestre! A fuga do algoritmo foi um sucesso.`;
+  graduationScreen.style.display = "flex";
+  journeyRestartButton.focus();
 }
 
 function hideEndOverlays() {
   victoryOverlay.style.display = "none";
   defeatOverlay.style.display = "none";
+  graduationScreen.style.display = "none";
+  defeatTitle.innerText = "Game Over: Dados Completamente Extraidos";
 }
 
 function findNearestThreat(x, y, maxDistance) {
@@ -2674,77 +3916,109 @@ function isPlayerProtectedByAllyShield() {
 }
 
 function drawBackground() {
-  if (currentLevel === 3) {
-    if (!digitalRain) {
-      digitalRain = new DigitalRain(WIDTH, HEIGHT, 16);
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    }
-
-    digitalRain.draw(ctx);
-
-    ctx.fillStyle = "rgba(57, 255, 20, 0.08)";
-    ctx.font = "700 46px Consolas, monospace";
-    ctx.fillText(levelTitle, 44, 100);
-    return;
-  }
-
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
+  const skyColors = {
+    1: ["#a1c4fd", "#c2e9fb"], // Vale do feed - Manha
+    2: ["#ffecd2", "#fcb69f"], // Casa Inteligente - Entardecer
+    3: ["#0b162c", "#1a2a42"], // Matrix / Futuros - Escuro pastel
+    4: ["#e0c3fc", "#8ec5fc"], // Cultura Tecnica - Ceu magico
+    5: ["#ff9a9e", "#fecfef"], // Tecno-estetica - Rosa sunset
+    6: ["#0f2027", "#203a43"], // Panoptico - Noite tensa
+    7: ["#d4fc79", "#96e6a1"], // Qualificacao - Verde sucesso
+    8: ["#89f7fe", "#66a6ff"], // Parodia Praxis - Gelo
+    9: ["#ffb199", "#ff0844"]  // Defesa final - Fogo sunset
+  };
+
+  const colors = skyColors[currentLevel] || ["#a1c4fd", "#c2e9fb"];
+  
   const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  if (currentLevel === 6) {
-    gradient.addColorStop(0, "#09030b");
-    gradient.addColorStop(0.52, "#1c0710");
-    gradient.addColorStop(1, "#10070c");
-  } else if (currentLevel === 5) {
-    gradient.addColorStop(0, "#243b9f");
-    gradient.addColorStop(0.52, "#5a4fcf");
-    gradient.addColorStop(1, "#2f174a");
-  } else if (currentLevel === 4) {
-    gradient.addColorStop(0, "#12071f");
-    gradient.addColorStop(0.55, "#1b1230");
-    gradient.addColorStop(1, "#25152f");
-  } else if (currentLevel === 2) {
-    gradient.addColorStop(0, "#060b14");
-    gradient.addColorStop(0.55, "#111923");
-    gradient.addColorStop(1, "#17191d");
-  } else {
-    gradient.addColorStop(0, "#080a10");
-    gradient.addColorStop(0.55, "#111821");
-    gradient.addColorStop(1, "#15110d");
-  }
+  gradient.addColorStop(0, colors[0]);
+  gradient.addColorStop(1, colors[1]);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.strokeStyle = currentLevel === 6
-    ? "rgba(255, 42, 42, 0.12)"
-    : currentLevel === 5
-      ? "rgba(255, 176, 56, 0.14)"
-      : currentLevel === 4
-      ? "rgba(194, 59, 255, 0.12)"
-      : currentLevel === 2
-      ? "rgba(124, 199, 255, 0.09)"
-      : "rgba(88, 220, 190, 0.11)";
-  ctx.lineWidth = 1;
-
-  const gridOffset = (elapsed * 18) % 48;
-  for (let x = -48; x <= WIDTH; x += 48) {
-    ctx.beginPath();
-    ctx.moveTo(x + gridOffset, 0);
-    ctx.lineTo(x + gridOffset, HEIGHT);
-    ctx.stroke();
+  if (currentLevel === 3) {
+    if (!digitalRain) {
+      digitalRain = new DigitalRain(WIDTH, HEIGHT, 16);
+    }
+    digitalRain.draw(ctx);
+    ctx.fillStyle = "rgba(57, 255, 20, 0.15)";
+    ctx.font = "700 36px Inter, Segoe UI, Arial";
+    ctx.fillText(levelTitle, 44, 152);
+    return;
   }
 
-  for (let y = 0; y <= HEIGHT; y += 48) {
+  // Draw Sun or Moon
+  const isNight = currentLevel === 6 || currentLevel === 3;
+  const astroColor = isNight ? "#fdfbfb" : "#fffae3";
+  const astroGlow = isNight ? "rgba(255, 255, 255, 0.4)" : "rgba(255, 220, 100, 0.4)";
+  const astroSize = 45 + Math.sin(elapsed * 2) * 4;
+
+  ctx.save();
+  ctx.fillStyle = astroColor;
+  ctx.shadowColor = astroGlow;
+  ctx.shadowBlur = 40;
+  ctx.beginPath();
+  ctx.arc(WIDTH - 120, 100, astroSize, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Draw Clouds
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  for (let i = 0; i < 4; i++) {
+    const cloudSpeed = 15 + i * 5;
+    const x = ((elapsed * cloudSpeed) + i * 300) % (WIDTH + 200) - 100;
+    const y = 50 + (i * 40) % 100;
+    
     ctx.beginPath();
-    ctx.moveTo(0, y + gridOffset * 0.5);
-    ctx.lineTo(WIDTH, y + gridOffset * 0.5);
-    ctx.stroke();
+    ctx.arc(x, y, 30, 0, Math.PI * 2);
+    ctx.arc(x + 25, y - 15, 35, 0, Math.PI * 2);
+    ctx.arc(x + 55, y, 30, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-  ctx.font = "700 52px Inter, Segoe UI, Arial";
-  ctx.fillText(levelTitle, 44, 100);
+  // Parallax Silhouettes (Campuses & Servers)
+  const drawSilhouettes = (color, speedMultiplier, baseHeight, buildings) => {
+    ctx.fillStyle = color;
+    const offset = (elapsed * speedMultiplier) % WIDTH;
+    
+    for (let loop = 0; loop < 2; loop++) {
+      const startX = loop * WIDTH - offset;
+      let currentX = startX;
+      
+      for (const b of buildings) {
+        if (typeof roundRect === 'function') {
+          roundRect(ctx, currentX, HEIGHT - baseHeight - b.h, b.w, baseHeight + b.h, 12);
+        } else {
+          ctx.fillRect(currentX, HEIGHT - baseHeight - b.h, b.w, baseHeight + b.h);
+        }
+        currentX += b.w + b.gap;
+      }
+    }
+  };
+
+  const bgBuildingColor = isNight ? "rgba(40, 50, 70, 0.6)" : "rgba(255, 255, 255, 0.25)";
+  const fgBuildingColor = isNight ? "rgba(20, 25, 40, 0.8)" : "rgba(255, 255, 255, 0.4)";
+
+  const bgBuildings = [
+    {w: 80, h: 120, gap: 20}, {w: 140, h: 80, gap: 40}, {w: 60, h: 150, gap: 15}, 
+    {w: 120, h: 100, gap: 50}, {w: 90, h: 180, gap: 30}, {w: 160, h: 60, gap: 30},
+    {w: 70, h: 130, gap: 20}, {w: 100, h: 90, gap: 0}
+  ];
+  drawSilhouettes(bgBuildingColor, 12, 50, bgBuildings);
+
+  const fgBuildings = [
+    {w: 100, h: 60, gap: 30}, {w: 80, h: 90, gap: 15}, {w: 150, h: 40, gap: 40}, 
+    {w: 60, h: 110, gap: 20}, {w: 130, h: 70, gap: 35}, {w: 70, h: 100, gap: 25},
+    {w: 110, h: 50, gap: 30}, {w: 90, h: 80, gap: 0}
+  ];
+  drawSilhouettes(fgBuildingColor, 28, 20, fgBuildings);
+
+  // Title Text
+  ctx.fillStyle = isNight ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.08)";
+  ctx.font = "700 36px Inter, Segoe UI, Arial";
+  ctx.fillText(levelTitle, 44, 152);
 }
 
 function drawHud() {
@@ -2873,7 +4147,7 @@ function resetIdleQuoteState() {
 }
 
 function updateIdleQuote(deltaTime) {
-  if (!player || gameEnded) {
+  if (!player || gameEnded || currentLevel === 7) {
     resetIdleQuoteState();
     return;
   }

@@ -15,7 +15,18 @@
       tabindex="0"
       aria-label="Área jogável de Incógnito: A Fuga do Algoritmo"
     ></canvas>
-    <button id="inGameGlossaryButton" class="in-game-glossary" type="button">Gloss&aacute;rio (G)</button>
+    <button id="inGameGlossaryButton" class="in-game-glossary" type="button">Refer&ecirc;ncias (G)</button>
+    <button id="fullscreenButton" class="fullscreen-btn" type="button">⛶ Tela Cheia</button>
+
+    <div id="mobileControls" class="mobile-controls">
+      <div class="d-pad">
+        <button id="btnLeft" class="touch-btn" aria-label="Esquerda">◀</button>
+        <button id="btnRight" class="touch-btn" aria-label="Direita">▶</button>
+      </div>
+      <div class="action-pad">
+        <button id="btnJump" class="touch-btn" aria-label="Pular">▲ Pular</button>
+      </div>
+    </div>
 
     <section id="characterSelect" class="character-select" aria-labelledby="menuTitle">
       <div class="menu-panel">
@@ -35,14 +46,14 @@
           </button>
         </div>
 
-        <button id="glossaryButton" class="glossary-open" type="button">[ ACESSAR GLOSS&Aacute;RIO DA DISCIPLINA ]</button>
+        <button id="glossaryButton" class="glossary-open" type="button">[ ACESSAR REFER&Ecirc;NCIAS DA DISCIPLINA ]</button>
       </div>
     </section>
 
     <div id="glossary-modal" class="glossary-modal" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
       <div class="glossary-panel">
-        <p class="kicker">Pergaminhos Acad&ecirc;micos</p>
-        <h2 id="glossaryTitle">Gloss&aacute;rio da Disciplina</h2>
+        <p class="kicker">Pergaminhos de Refer&ecirc;ncias</p>
+        <h2 id="glossaryTitle">Refer&ecirc;ncias da Disciplina</h2>
         <div id="glossaryContent" class="glossary-content"></div>
         <button id="glossaryCloseButton" class="end-button" type="button">Fechar / Voltar ao jogo</button>
       </div>
@@ -78,6 +89,37 @@
       </div>
     </div>
 
+    <section id="student-selection-screen" class="student-selection-screen" aria-labelledby="studentSelectionTitle">
+      <div class="student-panel">
+        <p class="kicker">Intermiss&atilde;o</p>
+        <h2 id="studentSelectionTitle">Banca de Qualifica&ccedil;&atilde;o</h2>
+        <p class="student-copy">O momento mais temido chegou: A Banca de Qualifica&ccedil;&atilde;o! Cada professor exige um conceito espec&iacute;fico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para n&atilde;o errar o autor na frente da banca!</p>
+
+        <div class="student-grid" role="group" aria-label="Sele&ccedil;&atilde;o de orientando">
+          <button class="student-card" type="button" data-student="anderson">
+            <canvas id="student-preview-anderson" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
+            <span>Anderson</span>
+          </button>
+          <button class="student-card" type="button" data-student="rafael">
+            <canvas id="student-preview-rafael" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
+            <span>Rafael</span>
+          </button>
+          <button class="student-card" type="button" data-student="viviane">
+            <canvas id="student-preview-viviane" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
+            <span>Viviane</span>
+          </button>
+          <button class="student-card" type="button" data-student="rodrigo">
+            <canvas id="student-preview-rodrigo" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
+            <span>Rodrigo</span>
+          </button>
+          <button class="student-card" type="button" data-student="myllena">
+            <canvas id="student-preview-myllena" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
+            <span>Myllena</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <div id="victoryOverlay" class="end-overlay victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
       <div class="end-panel">
         <p class="kicker">Servidor Seguro</p>
@@ -100,6 +142,21 @@
         </blockquote>
         <button id="retryButton" class="end-button danger" type="button">Tentar Novamente</button>
       </div>
+    </div>
+
+    <div id="graduation-screen" class="graduation-screen" role="dialog" aria-modal="true" aria-labelledby="graduationTitle">
+      <div class="graduation-panel">
+        <p class="kicker">Titula&ccedil;&atilde;o</p>
+        <h2 id="graduationTitle">CERTIFICADO DE MESTRADO</h2>
+        <p id="graduationText" class="graduation-text">O Programa de P&oacute;s-gradua&ccedil;&atilde;o concede o t&iacute;tulo de Mestre.</p>
+        <div class="graduation-actions">
+          <button id="journeyRestartButton" class="end-button" type="button">Reiniciar Jornada</button>
+          <button id="creditsButton" class="end-button secondary" type="button">Ver Cr&eacute;ditos</button>
+        </div>
+      </div>
+    </div>
+    <div class="portrait-warning" id="portraitWarning">
+      <p>Gire o celular para jogar! 📱🔁</p>
     </div>
   </main>
 
