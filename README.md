@@ -1,11 +1,14 @@
 # Incógnito: A Fuga do Algoritmo
 
+https://anderitmo.github.io/game-incognito/
 
 
 > **Os Moldes da Educação: Entre a Fabricação do "Capital Humano" e a Emancipação pela Cultura Técnica**
 
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-brightgreen)
 ![Tech](https://img.shields.io/badge/Tecnologia-HTML5%20Canvas%20%7C%20Vanilla%20JS-blue)
+
+[Jogue online ](https://anderitmo.github.io/game-incognito/).
 
 ## 📖 Sobre o Projeto
 
