@@ -1,6 +1,14 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const characterSelect = document.getElementById("characterSelect");
+const termsModal = document.getElementById("terms-modal");
+const termsAcceptButton = document.getElementById("termsAcceptButton");
+const termsRejectLink = document.getElementById("termsRejectLink");
+const glossaryButton = document.getElementById("glossaryButton");
+const inGameGlossaryButton = document.getElementById("inGameGlossaryButton");
+const glossaryModal = document.getElementById("glossary-modal");
+const glossaryContent = document.getElementById("glossaryContent");
+const glossaryCloseButton = document.getElementById("glossaryCloseButton");
 const victoryOverlay = document.getElementById("victoryOverlay");
 const defeatOverlay = document.getElementById("defeatOverlay");
 const nextPhaseButton = document.getElementById("nextPhaseButton");
@@ -9,6 +17,12 @@ const victoryQuoteText = document.getElementById("victoryQuoteText");
 const victoryQuoteAuthor = document.getElementById("victoryQuoteAuthor");
 const defeatQuoteText = document.getElementById("defeatQuoteText");
 const defeatQuoteAuthor = document.getElementById("defeatQuoteAuthor");
+const cutsceneUI = document.getElementById("cutscene-ui");
+const cutsceneCanvas = document.getElementById("cutsceneCanvas");
+const cutsceneCtx = cutsceneCanvas.getContext("2d");
+const cutsceneSpeaker = document.getElementById("cutsceneSpeaker");
+const cutsceneText = document.getElementById("cutsceneText");
+const cutsceneNextButton = document.getElementById("cutsceneNextButton");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -27,6 +41,11 @@ const bordoesJuliana = [
 // Bordoes da Prof. Celi. Adicione novos bordoes da Celi aqui.
 const bordoesCeli = [
   "Pergunte ao seu orientador!"
+];
+
+// Bordoes do Prof. Giordano. Adicione novos bordoes do Giordano aqui.
+const bordoesGiordano = [
+  "Se eu estiver na sua banca eu vou perguntar!"
 ];
 
 const quotesDefeat = [
@@ -67,6 +86,33 @@ const quotesVictory = [
   }
 ];
 
+const glossarioData = [
+  {
+    id: 1,
+    titulo: "Fundamentos Ontológicos",
+    autor: "Demerval Saviani",
+    texto: "O trabalho não é apenas emprego, mas a base ontológica da existência humana. A educação nasce da necessidade de transmitir o processo de trabalho ao longo da história."
+  },
+  {
+    id: 2,
+    titulo: "Sociedade de Controle",
+    autor: "Gilles Deleuze",
+    texto: "Não estamos mais na disciplina das fábricas, mas no controle contínuo ao ar livre. A vigilância tornou-se fluida e constante."
+  },
+  {
+    id: 3,
+    titulo: "O Novo Gerencialismo",
+    autor: "Christian Laval",
+    texto: "A escola passa a ser gerida como uma empresa, onde a educação é reduzida a um serviço e o aluno a um capital humano focado apenas na utilidade mercadológica."
+  },
+  {
+    id: 4,
+    titulo: "Tecnoestética",
+    autor: "Emerson Freire",
+    texto: "A tecnologia não deve ser separada da sensibilidade. Precisamos de poetas técnicos para construir uma formação que una a utilidade à experiência estética e cultural."
+  }
+];
+
 class AudioManager {
   constructor() {
     this.context = null;
@@ -75,6 +121,10 @@ class AudioManager {
     this.bgmLfo = null;
     this.bgmLfoGain = null;
     this.bgmGain = null;
+    this.bossOscillators = [];
+    this.bossGain = null;
+    this.bossIntervalId = null;
+    this.bossStep = 0;
   }
 
   init() {
@@ -170,6 +220,8 @@ class AudioManager {
       return;
     }
 
+    this.stopBossBGM();
+
     const now = this.context.currentTime;
     if (this.bgmOscillator) {
       this.bgmGain.gain.cancelScheduledValues(now);
@@ -202,6 +254,8 @@ class AudioManager {
   }
 
   stopBGM() {
+    this.stopBossBGM();
+
     if (!this.context || !this.bgmOscillator) {
       return;
     }
@@ -219,6 +273,87 @@ class AudioManager {
     this.bgmLfo = null;
     this.bgmLfoGain = null;
     this.bgmGain = null;
+  }
+
+  playBossBGM() {
+    if (!this.ensureReady()) {
+      return;
+    }
+
+    if (this.bossGain) {
+      return;
+    }
+
+    if (this.bgmOscillator) {
+      const now = this.context.currentTime;
+      this.bgmGain.gain.setTargetAtTime(0.001, now, 0.05);
+      this.bgmOscillator.stop(now + 0.15);
+      this.bgmLfo.stop(now + 0.15);
+      this.bgmOscillator = null;
+      this.bgmLfo = null;
+      this.bgmLfoGain = null;
+      this.bgmGain = null;
+    }
+
+    const now = this.context.currentTime;
+    this.bossGain = this.context.createGain();
+    this.bossGain.gain.setValueAtTime(0.055, now);
+    this.bossGain.connect(this.masterGain);
+
+    const bass = this.context.createOscillator();
+    bass.type = "square";
+    bass.frequency.setValueAtTime(82.41, now);
+    bass.connect(this.bossGain);
+    bass.start(now);
+    this.bossOscillators.push(bass);
+
+    this.bossIntervalId = setInterval(() => {
+      if (!this.context || !this.bossGain) {
+        return;
+      }
+
+      const tickTime = this.context.currentTime;
+      const bassNote = this.bossStep % 2 === 0 ? 82.41 : 98;
+      bass.frequency.setValueAtTime(bassNote, tickTime);
+
+      const beep = this.context.createOscillator();
+      const beepGain = this.context.createGain();
+      beep.type = "square";
+      beep.frequency.setValueAtTime(620 + Math.random() * 820, tickTime);
+      beepGain.gain.setValueAtTime(0.001, tickTime);
+      beepGain.gain.exponentialRampToValueAtTime(0.045, tickTime + 0.01);
+      beepGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.09);
+      beep.connect(beepGain);
+      beepGain.connect(this.masterGain);
+      beep.start(tickTime);
+      beep.stop(tickTime + 0.1);
+
+      this.bossStep += 1;
+    }, 170);
+  }
+
+  stopBossBGM() {
+    if (this.bossIntervalId) {
+      clearInterval(this.bossIntervalId);
+      this.bossIntervalId = null;
+    }
+
+    if (!this.context || !this.bossGain) {
+      this.bossOscillators = [];
+      this.bossGain = null;
+      return;
+    }
+
+    const now = this.context.currentTime;
+    this.bossGain.gain.setTargetAtTime(0.001, now, 0.06);
+
+    for (const oscillator of this.bossOscillators) {
+      oscillator.stop(now + 0.15);
+    }
+
+    this.bossOscillators = [];
+    this.bossGain = null;
+    this.bossStep = 0;
   }
 
   playTone(frequency, start, duration, type, volume) {
@@ -254,6 +389,270 @@ const CHARACTERS = {
   }
 };
 
+function normalizeCharacterName(characterName = "") {
+  return characterName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function drawCharacter(context, x, y, width, height, characterName) {
+  const normalizedName = normalizeCharacterName(characterName);
+  const isEmerson = normalizedName.includes("emerson");
+  const isJuliana = normalizedName.includes("juliana");
+  const isCeli = normalizedName.includes("celi");
+  const isGiordano = normalizedName.includes("giordano");
+
+  const palette = isJuliana
+    ? {
+        skin: "#9be7b3",
+        outfit: "#27ae60",
+        outfitDark: "#125b37",
+        detail: "#d9ffe7",
+        shoe: "#101317"
+      }
+    : isCeli
+    ? {
+        skin: "#f0c8ff",
+        outfit: "#c23bff",
+        outfitDark: "#5c1379",
+        detail: "#ffe5ff",
+        shoe: "#241127"
+      }
+    : isGiordano
+    ? {
+        skin: "#d8f2ff",
+        outfit: "#4fc3ff",
+        outfitDark: "#1b5f8f",
+        detail: "#ffb038",
+        shoe: "#12263a"
+      }
+    : {
+        skin: "#9cc7ff",
+        outfit: "#2f80ed",
+        outfitDark: "#143c7a",
+        detail: "#d9ecff",
+        shoe: "#101317"
+      };
+
+  const headRadius = Math.min(width * 0.34, height * 0.23);
+  const centerX = width / 2;
+  const headY = height * 0.2;
+  const bodyTop = height * 0.36;
+  const bodyBottom = height * 0.9;
+
+  context.save();
+  context.translate(x, y);
+
+  context.fillStyle = "rgba(0, 0, 0, 0.28)";
+  context.beginPath();
+  context.ellipse(centerX, height + 6, width * 0.58, height * 0.11, 0, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = palette.skin;
+  context.beginPath();
+  context.arc(centerX, headY, headRadius, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = palette.outfit;
+
+  if (isJuliana || isCeli) {
+    // Vestido compartilhado em todos os contextos: Player, NPC e retrato.
+    context.beginPath();
+    context.moveTo(centerX, bodyTop);
+    context.lineTo(width * 0.16, bodyBottom);
+    context.lineTo(width * 0.84, bodyBottom);
+    context.closePath();
+    context.fill();
+
+    context.strokeStyle = palette.outfitDark;
+    context.lineWidth = Math.max(2, width * 0.06);
+    context.beginPath();
+    context.moveTo(width * 0.32, bodyTop + height * 0.11);
+    context.lineTo(width * 0.68, bodyTop + height * 0.11);
+    context.stroke();
+
+    context.fillStyle = palette.detail;
+    context.beginPath();
+    context.arc(centerX, bodyTop + height * 0.12, Math.max(2, width * 0.07), 0, Math.PI * 2);
+    context.fill();
+  } else {
+    const torsoX = width * 0.18;
+    const torsoY = bodyTop;
+    const torsoWidth = width * 0.64;
+    const torsoHeight = height * 0.54;
+
+    if (isEmerson) {
+      context.save();
+      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
+      context.clip();
+
+      const stripeHeight = Math.max(3, height * 0.075);
+      for (let stripeY = torsoY; stripeY < torsoY + torsoHeight; stripeY += stripeHeight) {
+        const stripeIndex = Math.floor((stripeY - torsoY) / stripeHeight);
+        context.fillStyle = stripeIndex % 2 === 0 ? "#f8f8f2" : "#000080";
+        context.fillRect(torsoX, stripeY, torsoWidth, stripeHeight);
+      }
+
+      context.restore();
+
+      context.strokeStyle = palette.outfitDark;
+      context.lineWidth = Math.max(1.5, width * 0.045);
+      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
+      context.stroke();
+    } else {
+      roundRect(context, torsoX, torsoY, torsoWidth, torsoHeight, width * 0.12);
+      context.fill();
+    }
+
+    context.fillStyle = palette.outfitDark;
+    if (!isEmerson) {
+      context.fillRect(width * 0.3, bodyTop, width * 0.12, height * 0.54);
+      context.fillRect(width * 0.58, bodyTop, width * 0.12, height * 0.54);
+    }
+
+    context.fillStyle = palette.detail;
+    if (isGiordano) {
+      context.fillRect(width * 0.2, bodyTop + height * 0.19, width * 0.6, height * 0.08);
+    } else if (isEmerson) {
+      context.fillStyle = "#ff0000";
+      context.fillRect(width * 0.27, bodyTop - height * 0.04, width * 0.46, height * 0.08);
+      context.fillRect(width * 0.56, bodyTop + height * 0.02, width * 0.12, height * 0.2);
+
+      context.fillStyle = "#1f1f24";
+      context.beginPath();
+      context.ellipse(centerX, headY - headRadius * 0.82, width * 0.34, height * 0.075, -0.18, 0, Math.PI * 2);
+      context.fill();
+
+      context.beginPath();
+      context.ellipse(centerX - width * 0.08, headY - headRadius * 0.66, width * 0.24, height * 0.045, -0.08, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.beginPath();
+      context.moveTo(centerX, bodyTop + height * 0.08);
+      context.lineTo(centerX - width * 0.08, bodyTop + height * 0.24);
+      context.lineTo(centerX + width * 0.08, bodyTop + height * 0.24);
+      context.closePath();
+      context.fill();
+    }
+  }
+
+  context.fillStyle = "#101317";
+  context.fillRect(centerX - width * 0.15, headY - height * 0.04, width * 0.09, height * 0.06);
+  context.fillRect(centerX + width * 0.08, headY - height * 0.04, width * 0.09, height * 0.06);
+
+  context.fillStyle = palette.shoe;
+  context.fillRect(width * 0.22, bodyBottom, width * 0.18, height * 0.1);
+  context.fillRect(width * 0.6, bodyBottom, width * 0.18, height * 0.1);
+
+  context.restore();
+}
+
+function renderPreviews() {
+  const previews = [
+    { id: "preview-emerson", name: "Prof. Emerson" },
+    { id: "preview-juliana", name: "Prof. Juliana" }
+  ];
+
+  previews.forEach(({ id, name }) => {
+    const previewCanvas = document.getElementById(id);
+    const previewContext = previewCanvas?.getContext("2d");
+
+    if (!previewContext) {
+      return;
+    }
+
+    previewContext.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    drawCharacter(previewContext, 3, 0, 34, 42, name);
+  });
+}
+
+function addCollectibleScroll(itemId, x, y) {
+  const existsInGlossary = glossarioData.some((entry) => entry.id === itemId);
+
+  if (!existsInGlossary || unlockedScrolls.includes(itemId)) {
+    return;
+  }
+
+  collectibleScrolls.push(new CollectibleScroll(x, y, itemId));
+}
+
+function unlockScroll(itemId) {
+  if (!unlockedScrolls.includes(itemId)) {
+    unlockedScrolls.push(itemId);
+  }
+}
+
+function renderGlossary() {
+  glossaryContent.innerHTML = "";
+
+  glossarioData.forEach((entry) => {
+    const article = document.createElement("article");
+    const isUnlocked = unlockedScrolls.includes(entry.id);
+    article.className = `glossary-entry${isUnlocked ? "" : " is-locked"}`;
+
+    const title = document.createElement("h3");
+    const text = document.createElement("p");
+    text.className = "glossary-text";
+
+    if (isUnlocked) {
+      const author = document.createElement("p");
+      title.textContent = entry.titulo;
+      author.className = "glossary-author";
+      author.textContent = entry.autor;
+      text.textContent = entry.texto;
+      article.append(title, author, text);
+    } else {
+      title.textContent = "Item Bloqueado";
+      text.textContent = "Explore as Fases para encontrar.";
+      article.append(title, text);
+    }
+
+    glossaryContent.appendChild(article);
+  });
+}
+
+function openGlossary(fromGame = false) {
+  if (fromGame && (!gameStarted || gameEnded || cutsceneActive)) {
+    return;
+  }
+
+  glossaryOpenedInGame = fromGame;
+
+  if (fromGame) {
+    pauseGameLoop();
+  }
+
+  renderGlossary();
+  glossaryModal.style.display = "flex";
+  glossaryCloseButton.focus();
+}
+
+function closeGlossary() {
+  glossaryModal.style.display = "none";
+
+  if (glossaryOpenedInGame) {
+    glossaryOpenedInGame = false;
+    canvas.focus();
+    lastTime = performance.now();
+    startGameLoop();
+    return;
+  }
+
+  glossaryButton.focus();
+}
+
+function pauseGameLoop() {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+}
+
+function setInGameGlossaryVisible(visible) {
+  inGameGlossaryButton.classList.toggle("is-visible", visible);
+}
+
 const PHYSICS = {
   gravity: 2200,
   moveAcceleration: 5200,
@@ -281,11 +680,16 @@ let gameStarted = false;
 let gameEnded = false;
 let animationFrameId = null;
 let currentCharacter = null;
+let currentCharacterKey = "emerson";
+let pendingCharacter = null;
+let pendingCharacterKey = "emerson";
+let glossaryOpenedInGame = false;
 let lastGameResult = null;
 let lastTime = 0;
 let elapsed = 0;
 let nivelDeRastreamento = 0;
 let privacy = 100;
+let unlockedScrolls = [];
 let statusMessage = "";
 let statusTimer = 0;
 let idleTimer = 0;
@@ -295,6 +699,7 @@ let levelTitle = "VALE DO FEED";
 let playerStart = { x: 36, y: 438 };
 let platforms = [];
 let cookies = [];
+let collectibleScrolls = [];
 let drones = [];
 let vacuums = [];
 let smartSpeakers = [];
@@ -302,6 +707,10 @@ let books = [];
 let allyNPC = null;
 let exitDoor = null;
 let digitalRain = null;
+let bossCamera = null;
+let cutsceneActive = false;
+let cutsceneIndex = 0;
+let cutsceneDialogues = [];
 
 class DigitalRain {
   constructor(width, height, fontSize = 16) {
@@ -357,25 +766,37 @@ class Plataforma {
   }
 
   draw(context) {
+    const isTechno = this.variant === "techno" || this.variant === "techno-safe";
     const gradient = context.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
     const topColor = this.variant === "ground"
       ? "#343a40"
-      : this.variant === "furniture"
+      : isTechno
+        ? "#5c66d6"
+        : this.variant === "furniture"
         ? "#5f6872"
         : "#4b525b";
     const bottomColor = this.variant === "ground"
       ? "#171b20"
-      : this.variant === "furniture"
+      : isTechno
+        ? "#2b2365"
+        : this.variant === "furniture"
         ? "#2f3640"
         : "#242a31";
     gradient.addColorStop(0, topColor);
     gradient.addColorStop(1, bottomColor);
 
+    context.save();
+    if (isTechno) {
+      context.shadowColor = "rgba(255, 176, 56, 0.78)";
+      context.shadowBlur = 14;
+    }
+
     context.fillStyle = gradient;
     context.fillRect(this.x, this.y, this.width, this.height);
 
-    context.fillStyle = "rgba(255, 255, 255, 0.18)";
+    context.fillStyle = isTechno ? "rgba(255, 205, 92, 0.45)" : "rgba(255, 255, 255, 0.18)";
     context.fillRect(this.x, this.y, this.width, 3);
+    context.restore();
   }
 }
 
@@ -472,6 +893,58 @@ class Cookie {
     context.arc(this.x + 4, this.y + 2, 2, 0, Math.PI * 2);
     context.arc(this.x + 1, this.y - 6, 1.6, 0, Math.PI * 2);
     context.fill();
+    context.restore();
+  }
+}
+
+class CollectibleScroll {
+  constructor(x, y, itemId) {
+    this.x = x;
+    this.y = y;
+    this.width = 28;
+    this.height = 22;
+    this.itemId = itemId;
+    this.collected = false;
+    this.pulse = Math.random() * Math.PI * 2;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  update(deltaTime) {
+    this.pulse += deltaTime * 4;
+  }
+
+  draw(context) {
+    if (this.collected) {
+      return;
+    }
+
+    const glow = 0.5 + Math.sin(this.pulse) * 0.25;
+
+    context.save();
+    context.shadowColor = `rgba(124, 199, 255, ${glow})`;
+    context.shadowBlur = 16;
+    context.fillStyle = "#e8f7ff";
+    roundRect(context, this.x, this.y, this.width, this.height, 5);
+    context.fill();
+
+    context.shadowBlur = 0;
+    context.strokeStyle = "#ffcf4a";
+    context.lineWidth = 2;
+    roundRect(context, this.x, this.y, this.width, this.height, 5);
+    context.stroke();
+
+    context.fillStyle = "#7cc7ff";
+    context.fillRect(this.x + 7, this.y + 6, this.width - 14, 2);
+    context.fillRect(this.x + 7, this.y + 11, this.width - 10, 2);
+    context.fillRect(this.x + 7, this.y + 16, this.width - 16, 2);
     context.restore();
   }
 }
@@ -799,13 +1272,16 @@ class Book {
 }
 
 class AllyNPC {
-  constructor(x, y) {
+  constructor(x, y, options = {}) {
     this.x = x;
     this.y = y;
     this.width = 32;
     this.height = 54;
-    this.name = "Prof. Celi";
-    this.color = "#c23bff";
+    this.name = options.name || "Prof. Celi";
+    this.color = options.color || "#c23bff";
+    this.quotes = options.quotes || bordoesCeli;
+    this.variant = options.variant || "celi";
+    this.shieldTimer = 0;
     this.following = false;
     this.cooldown = 0;
     this.idleTimer = 0;
@@ -826,6 +1302,8 @@ class AllyNPC {
       return;
     }
 
+    this.shieldTimer = Math.max(0, this.shieldTimer - deltaTime);
+
     if (!this.following && distanceBetweenCenters(this, player) < 82) {
       this.following = true;
       this.currentQuote = "Pergunte ao seu orientador!";
@@ -834,14 +1312,19 @@ class AllyNPC {
     }
 
     if (this.following) {
+      const holdingShield = this.isShieldActive();
       const offsetX = player.facing >= 0 ? -54 : 54;
-      const targetX = clamp(player.x + offsetX, 8, WIDTH - this.width - 8);
+      const targetX = holdingShield ? this.x : clamp(player.x + offsetX, 8, WIDTH - this.width - 8);
       const targetY = clamp(player.y + player.height - this.height, 8, HEIGHT - this.height - 8);
 
-      this.x += (targetX - this.x) * Math.min(1, deltaTime * 7);
+      if (!holdingShield) {
+        this.x += (targetX - this.x) * Math.min(1, deltaTime * 7);
+      }
       this.y += (targetY - this.y) * Math.min(1, deltaTime * 7);
       this.cooldown = Math.max(0, this.cooldown - deltaTime);
-      this.tryThrowBook();
+      if (!holdingShield) {
+        this.tryThrowBook();
+      }
     }
 
     this.updateIdleQuote(deltaTime);
@@ -862,6 +1345,26 @@ class AllyNPC {
     this.cooldown = 2;
   }
 
+  activateShield(duration) {
+    this.following = true;
+    this.shieldTimer = Math.max(this.shieldTimer, duration);
+    this.currentQuote = "Fique no ponto cego!";
+    this.quoteTimer = 2;
+  }
+
+  isShieldActive() {
+    return this.variant === "juliana" && this.shieldTimer > 0;
+  }
+
+  getShieldBounds() {
+    return {
+      x: this.x - 18,
+      y: this.y - 10,
+      width: 68,
+      height: 78
+    };
+  }
+
   updateIdleQuote(deltaTime) {
     if (this.quoteTimer > 0) {
       this.quoteTimer = Math.max(0, this.quoteTimer - deltaTime);
@@ -871,41 +1374,27 @@ class AllyNPC {
     this.idleTimer += deltaTime;
 
     if (this.idleTimer >= 5) {
-      this.currentQuote = bordoesCeli[Math.floor(Math.random() * bordoesCeli.length)];
+      this.currentQuote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
       this.quoteTimer = 3;
       this.idleTimer = 0;
     }
   }
 
   draw(context) {
-    context.save();
-    context.translate(this.x, this.y);
+    drawCharacter(context, this.x, this.y, this.width, this.height, this.name);
 
-    context.fillStyle = "rgba(0, 0, 0, 0.24)";
-    context.beginPath();
-    context.ellipse(this.width / 2, this.height + 5, 18, 5, 0, 0, Math.PI * 2);
-    context.fill();
-
-    context.fillStyle = "#f0c8ff";
-    context.beginPath();
-    context.arc(16, 10, 11, 0, Math.PI * 2);
-    context.fill();
-
-    context.fillStyle = this.color;
-    context.beginPath();
-    context.moveTo(16, 19);
-    context.lineTo(4, 49);
-    context.lineTo(28, 49);
-    context.closePath();
-    context.fill();
-
-    context.fillStyle = "#241127";
-    context.fillRect(12, 8, 3, 3);
-    context.fillRect(20, 8, 3, 3);
-    context.fillRect(7, 49, 6, 5);
-    context.fillRect(20, 49, 6, 5);
-
-    context.restore();
+    if (this.isShieldActive()) {
+      const shield = this.getShieldBounds();
+      context.save();
+      context.fillStyle = "rgba(72, 209, 124, 0.16)";
+      context.strokeStyle = "rgba(72, 209, 124, 0.78)";
+      context.shadowColor = "rgba(72, 209, 124, 0.7)";
+      context.shadowBlur = 18;
+      roundRect(context, shield.x, shield.y, shield.width, shield.height, 14);
+      context.fill();
+      context.stroke();
+      context.restore();
+    }
 
     this.drawQuoteBubble(context);
   }
@@ -916,6 +1405,156 @@ class AllyNPC {
     }
 
     drawSpeechBubble(context, this.currentQuote, this.centerX, this.y - 10, 220, "#fff0ff", "#241127");
+  }
+}
+
+class BossCamera {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 116;
+    this.height = 78;
+    this.phase = "idle";
+    this.timer = 0;
+    this.attackInterval = 5;
+    this.chargeDuration = 1.25;
+    this.fireDuration = 1.15;
+    this.laserX = WIDTH / 2 - 18;
+    this.laserWidth = 36;
+    this.damageCooldown = 0;
+    this.patrolDirection = 1;
+  }
+
+  get eyeX() {
+    return this.x + this.width / 2;
+  }
+
+  get eyeY() {
+    return this.y + 38;
+  }
+
+  isCharging() {
+    return this.phase === "charging";
+  }
+
+  isFiring() {
+    return this.phase === "firing";
+  }
+
+  getLaserBounds() {
+    return {
+      x: this.laserX,
+      y: 0,
+      width: this.laserWidth,
+      height: HEIGHT
+    };
+  }
+
+  update(deltaTime) {
+    this.damageCooldown = Math.max(0, this.damageCooldown - deltaTime);
+    this.timer += deltaTime;
+
+    this.x += this.patrolDirection * 36 * deltaTime;
+    if (this.x < 120) {
+      this.x = 120;
+      this.patrolDirection = 1;
+    } else if (this.x + this.width > WIDTH - 120) {
+      this.x = WIDTH - 120 - this.width;
+      this.patrolDirection = -1;
+    }
+
+    if (this.phase === "idle" && this.timer >= this.attackInterval) {
+      this.phase = "charging";
+      this.timer = 0;
+      if (allyNPC && allyNPC.activateShield) {
+        allyNPC.activateShield(this.chargeDuration + this.fireDuration + 0.35);
+      }
+      return;
+    }
+
+    if (this.phase === "charging") {
+      this.laserX = clamp(this.eyeX - this.laserWidth / 2, 0, WIDTH - this.laserWidth);
+      if (this.timer >= this.chargeDuration) {
+        this.phase = "firing";
+        this.timer = 0;
+      }
+      return;
+    }
+
+    if (this.phase === "firing") {
+      this.checkLaserHit();
+      if (this.timer >= this.fireDuration) {
+        this.phase = "idle";
+        this.timer = 0;
+      }
+    }
+  }
+
+  checkLaserHit() {
+    if (!player || this.damageCooldown > 0 || isPlayerProtectedByAllyShield()) {
+      return;
+    }
+
+    if (rectsOverlap(player, this.getLaserBounds())) {
+      audioManager.playCollision();
+      applyPrivacyDamage(40);
+      statusMessage = privacy === 0 ? "Privacidade comprometida" : "Laser panoptico atingiu voce";
+      statusTimer = 1.5;
+      player.vx = player.x + player.width / 2 < this.eyeX ? -520 : 520;
+      player.vy = -420;
+      player.grounded = false;
+      player.invulnerabilityTimer = PLAYER_INVULNERABLE_TIME;
+      this.damageCooldown = 1.2;
+    }
+  }
+
+  draw(context) {
+    if (this.isFiring()) {
+      const laser = this.getLaserBounds();
+      context.save();
+      context.fillStyle = "rgba(255, 31, 31, 0.42)";
+      context.shadowColor = "rgba(255, 31, 31, 0.8)";
+      context.shadowBlur = 22;
+      context.fillRect(laser.x, laser.y, laser.width, laser.height);
+      context.restore();
+    } else if (this.isCharging()) {
+      context.save();
+      context.strokeStyle = "rgba(255, 64, 64, 0.35)";
+      context.lineWidth = 3;
+      context.setLineDash([8, 8]);
+      context.beginPath();
+      context.moveTo(this.eyeX, this.eyeY);
+      context.lineTo(this.eyeX, HEIGHT);
+      context.stroke();
+      context.setLineDash([]);
+      context.restore();
+    }
+
+    const chargeGlow = this.isCharging() ? 1 : this.isFiring() ? 0.85 : 0.4;
+    context.save();
+    context.translate(this.x, this.y);
+
+    context.shadowColor = `rgba(255, 48, 48, ${chargeGlow})`;
+    context.shadowBlur = this.isCharging() ? 26 : 14;
+    context.fillStyle = "#2b2f38";
+    roundRect(context, 0, 0, this.width, this.height, 14);
+    context.fill();
+
+    context.fillStyle = "#151922";
+    roundRect(context, 16, 14, this.width - 32, 48, 10);
+    context.fill();
+
+    context.fillStyle = this.isCharging() || this.isFiring() ? "#ff2020" : "#a90f18";
+    context.beginPath();
+    context.arc(this.width / 2, 38, this.isCharging() ? 19 : 15, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "#ffb3b3";
+    context.beginPath();
+    context.arc(this.width / 2 - 5, 34, 4, 0, Math.PI * 2);
+    context.fill();
+
+    context.restore();
   }
 }
 
@@ -1119,38 +1758,43 @@ class Player {
 
   draw(context) {
     context.save();
-    context.translate(this.x, this.y);
     context.globalAlpha = this.isInvulnerable() && Math.floor(elapsed * 18) % 2 === 0 ? 0.35 : 1;
-
-    context.fillStyle = "rgba(0, 0, 0, 0.28)";
-    context.beginPath();
-    context.ellipse(this.width / 2, this.height + 6, 20, 6, 0, 0, Math.PI * 2);
-    context.fill();
-
-    context.fillStyle = this.character.color;
-    context.fillRect(6, 18, 22, 30);
-
-    context.fillStyle = this.character.accent;
-    context.beginPath();
-    context.arc(17, 11, 12, 0, Math.PI * 2);
-    context.fill();
-
-    context.fillStyle = "#101317";
-    context.fillRect(this.facing > 0 ? 21 : 9, 9, 4, 4);
-    context.fillRect(10, 49, 6, 5);
-    context.fillRect(22, 49, 6, 5);
-
+    drawCharacter(context, this.x, this.y, this.width, this.height, this.character.name);
     context.restore();
   }
 }
 
 loadLevel(currentLevel);
+renderPreviews();
+
+glossaryButton.addEventListener("click", () => {
+  openGlossary(false);
+});
+
+inGameGlossaryButton.addEventListener("click", () => {
+  openGlossary(true);
+});
+
+glossaryCloseButton.addEventListener("click", () => {
+  closeGlossary();
+});
 
 document.querySelectorAll("[data-character]").forEach((button) => {
   button.addEventListener("click", () => {
+    const selectedKey = button.dataset.character;
     const selected = CHARACTERS[button.dataset.character];
-    startGame(selected);
+    showTermsModal(selected, selectedKey);
   });
+});
+
+termsAcceptButton.addEventListener("click", () => {
+  acceptTermsAndStart();
+});
+
+termsRejectLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  alert("Erro: Recusa n\u00e3o lucrativa. Redirecionando para aceita\u00e7\u00e3o obrigat\u00f3ria...");
+  acceptTermsAndStart();
 });
 
 nextPhaseButton.addEventListener("click", () => {
@@ -1161,6 +1805,10 @@ nextPhaseButton.addEventListener("click", () => {
       currentLevel = 3;
     } else if (currentLevel === 3) {
       currentLevel = 4;
+    } else if (currentLevel === 4) {
+      currentLevel = 5;
+    } else if (currentLevel === 5) {
+      currentLevel = 6;
     }
   }
 
@@ -1171,18 +1819,57 @@ retryButton.addEventListener("click", () => {
   restartLevel();
 });
 
+cutsceneNextButton.addEventListener("click", () => {
+  advanceCutscene();
+});
+
+cutsceneUI.addEventListener("click", (event) => {
+  if (event.target === cutsceneUI) {
+    advanceCutscene();
+  }
+});
+
 window.addEventListener("keydown", (event) => {
+  const normalized = normalizeKey(event.key);
+
+  if (normalized === "g" && gameStarted && !gameEnded && !cutsceneActive) {
+    event.preventDefault();
+    if (glossaryModal.style.display === "flex") {
+      closeGlossary();
+    } else {
+      openGlossary(true);
+    }
+    return;
+  }
+
+  if (glossaryModal.style.display === "flex") {
+    return;
+  }
+
+  if (cutsceneActive) {
+    if ([" ", "Spacebar", "Enter"].includes(event.key)) {
+      event.preventDefault();
+      advanceCutscene();
+    }
+    return;
+  }
+
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(event.key)) {
     event.preventDefault();
   }
 
-  keys.add(normalizeKey(event.key));
+  keys.add(normalized);
 });
 
 window.addEventListener("keyup", (event) => {
-  keys.delete(normalizeKey(event.key));
+  const normalized = normalizeKey(event.key);
+  keys.delete(normalized);
 
-  if (["arrowup", "w", " "].includes(normalizeKey(event.key)) && player && player.vy < -180) {
+  if (glossaryModal.style.display === "flex") {
+    return;
+  }
+
+  if (["arrowup", "w", " "].includes(normalized) && player && player.vy < -180) {
     // Corte de pulo: soltar o botao reduz a subida e da controle fino de altura.
     player.vy *= 0.5;
   }
@@ -1191,11 +1878,23 @@ window.addEventListener("keyup", (event) => {
 function loadLevel(level) {
   platforms = [];
   cookies = [];
+  collectibleScrolls = [];
   drones = [];
   vacuums = [];
   smartSpeakers = [];
   books = [];
   allyNPC = null;
+  bossCamera = null;
+
+  if (level === 6) {
+    loadBossFightLevel();
+    return;
+  }
+
+  if (level === 5) {
+    loadTechnoAestheticLevel();
+    return;
+  }
 
   if (level === 4) {
     loadTechnicalCultureLevel();
@@ -1246,7 +1945,8 @@ function loadFeedValleyLevel() {
     new Drone(platforms[6], 28, 64, 1)
   ];
 
-  exitDoor = new ExitDoor(892, 418);
+  addCollectibleScroll(1, 502, 140);
+  configureExitDoorForCurrentLevel();
 }
 
 function loadSmartHomeLevel() {
@@ -1286,7 +1986,8 @@ function loadSmartHomeLevel() {
     new SmartSpeaker(558, 206, 24, 84, 2.2)
   ];
 
-  exitDoor = new ExitDoor(892, 418);
+  addCollectibleScroll(2, 830, 162);
+  configureExitDoorForCurrentLevel();
 }
 
 function loadBehavioralFuturesLevel() {
@@ -1307,9 +2008,7 @@ function loadBehavioralFuturesLevel() {
     // Zona segura superior: espaco para reposicionar antes da subida final.
     new Plataforma(178, 252, 250, 18, "glitch-safe"),
     // Glitch final curta.
-    new GlitchPlatform(514, 202, 142, 18, 2.2, 0.9, 1.5),
-    // Plataforma fixa sob a porta alta.
-    new Plataforma(820, 196, 124, 18, "glitch-safe")
+    new GlitchPlatform(514, 202, 142, 18, 2.2, 0.9, 1.5)
   ];
 
   cookies = [
@@ -1327,7 +2026,8 @@ function loadBehavioralFuturesLevel() {
     new VacuumRobot(platforms[0], 620, 72, -1, 250)
   ];
 
-  exitDoor = new ExitDoor(872, 122);
+  addCollectibleScroll(3, 568, 164);
+  configureExitDoorForCurrentLevel();
 }
 
 function loadTechnicalCultureLevel() {
@@ -1347,7 +2047,7 @@ function loadTechnicalCultureLevel() {
     // Degraus superiores com respiro.
     new Plataforma(168, 294, 230, 22, "furniture"),
     new Plataforma(494, 240, 260, 22, "furniture"),
-    new Plataforma(806, 190, 126, 22, "furniture")
+    new Plataforma(806, 220, 126, 22, "furniture")
   ];
 
   cookies = [
@@ -1372,15 +2072,229 @@ function loadTechnicalCultureLevel() {
   ];
 
   allyNPC = new AllyNPC(92, 438);
-  exitDoor = new ExitDoor(892, 418);
+  addCollectibleScroll(4, 842, 180);
+  configureExitDoorForCurrentLevel();
 }
 
-function startGame(character) {
+function loadTechnoAestheticLevel() {
+  currentLevel = 5;
+  levelTitle = "TECNO-ESTETICA";
+  playerStart = { x: 34, y: 438 };
+
+  platforms = [
+    // Mesma estrutura da Fase 4: zonas seguras e ritmo equivalente.
+    new Plataforma(0, 492, 960, 48, "ground"),
+    new Plataforma(118, 420, 170, 22, "techno"),
+    new Plataforma(338, 362, 292, 22, "techno-safe"),
+    new Plataforma(720, 402, 136, 22, "techno"),
+    new Plataforma(168, 294, 230, 22, "techno-safe"),
+    new Plataforma(494, 240, 260, 22, "techno-safe"),
+    new Plataforma(806, 190, 126, 22, "techno")
+  ];
+
+  cookies = [
+    new Cookie(206, 388),
+    new Cookie(548, 330),
+    new Cookie(860, 158),
+    new Cookie(888, 458)
+  ];
+
+  drones = [
+    new Drone(platforms[5], 36, 72, -1)
+  ];
+
+  vacuums = [
+    new VacuumRobot(platforms[3], 36, 54, 1),
+    new VacuumRobot(platforms[0], 600, 62, -1, 250)
+  ];
+
+  smartSpeakers = [
+    new SmartSpeaker(224, 254, 24, 78, 0.8),
+    new SmartSpeaker(592, 200, 22, 84, 2.4)
+  ];
+
+  allyNPC = new AllyNPC(92, 438, {
+    name: "Prof. Giordano",
+    color: "#4fc3ff",
+    quotes: bordoesGiordano,
+    variant: "giordano"
+  });
+  configureExitDoorForCurrentLevel();
+}
+
+function loadBossFightLevel() {
+  currentLevel = 6;
+  levelTitle = "PANOPTICO MECANICO";
+  playerStart = { x: 42, y: 438 };
+  const helperKey = currentCharacterKey === "emerson" ? "juliana" : "emerson";
+  const helperCharacter = CHARACTERS[helperKey];
+
+  platforms = [
+    new Plataforma(0, 492, 960, 48, "ground"),
+    new Plataforma(92, 396, 230, 22, "techno-safe"),
+    new Plataforma(378, 342, 220, 22, "techno-safe"),
+    new Plataforma(650, 396, 230, 22, "techno-safe"),
+    new Plataforma(270, 238, 160, 20, "techno"),
+    new Plataforma(536, 238, 160, 20, "techno")
+  ];
+
+  cookies = [
+    new Cookie(178, 364),
+    new Cookie(480, 310),
+    new Cookie(746, 364)
+  ];
+
+  allyNPC = new AllyNPC(116, 438, {
+    name: helperCharacter.name,
+    color: helperCharacter.color,
+    quotes: helperKey === "juliana" ? bordoesJuliana : bordoesEmerson,
+    variant: helperKey
+  });
+  allyNPC.following = true;
+
+  bossCamera = new BossCamera(WIDTH / 2 - 58, 34);
+  configureExitDoorForCurrentLevel();
+  prepareBossCutscene(helperKey);
+}
+
+function configureExitDoorForCurrentLevel() {
+  const doorWidth = 44;
+  const doorHeight = 74;
+  const doorX = WIDTH - 50;
+
+  if (currentLevel < 3) {
+    exitDoor = new ExitDoor(doorX, 418, doorWidth, doorHeight);
+    return;
+  }
+
+  const doorY = 50;
+  exitDoor = new ExitDoor(doorX, doorY, doorWidth, doorHeight);
+
+  const supportWidth = 136;
+  const supportHeight = 18;
+  const supportX = clamp(doorX + doorWidth / 2 - supportWidth / 2, 0, WIDTH - supportWidth);
+  const supportY = doorY + doorHeight;
+  platforms.push(new Plataforma(supportX, supportY, supportWidth, supportHeight, "glitch-safe"));
+}
+
+function prepareBossCutscene(helperKey) {
+  const helperName = CHARACTERS[helperKey].name;
+  const mainName = currentCharacter.name;
+
+  cutsceneDialogues = [
+    {
+      speaker: helperName,
+      text: "Vamos fazer uma roda... precisamos pensar estrategicamente."
+    },
+    {
+      speaker: mainName,
+      text: "Aquele livro da Zuboff nos avisou que a extracao nao pararia no mundo virtual. O capitalismo de vigilancia agora quer nosso espaco fisico."
+    },
+    {
+      speaker: helperName,
+      text: "Exato! A maquina quer automatizar nosso comportamento. Fique atras do meu escudo teorico quando o laser disparar. E hora da nossa cultura tecnica quebrar esse molde!"
+    }
+  ];
+
+  cutsceneIndex = 0;
+  cutsceneActive = true;
+  cutsceneUI.style.display = "flex";
+  updateCutsceneUI();
+}
+
+function updateCutsceneUI() {
+  const dialogue = cutsceneDialogues[cutsceneIndex];
+
+  if (!dialogue) {
+    endBossCutscene();
+    return;
+  }
+
+  cutsceneSpeaker.innerText = dialogue.speaker;
+  cutsceneText.innerText = dialogue.text;
+  renderCutscenePortraits();
+}
+
+function advanceCutscene() {
+  if (!cutsceneActive) {
+    return;
+  }
+
+  cutsceneIndex += 1;
+
+  if (cutsceneIndex >= cutsceneDialogues.length) {
+    endBossCutscene();
+    return;
+  }
+
+  updateCutsceneUI();
+}
+
+function endBossCutscene() {
+  cutsceneActive = false;
+  cutsceneUI.style.display = "none";
+  canvas.focus();
+  lastTime = performance.now();
+  audioManager.playBossBGM();
+  animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+function renderCutscenePortraits() {
+  cutsceneCtx.clearRect(0, 0, cutsceneCanvas.width, cutsceneCanvas.height);
+
+  const portraitPlayer = new Player(currentCharacter);
+  portraitPlayer.x = 92;
+  portraitPlayer.y = 70;
+  portraitPlayer.grounded = true;
+
+  const portraitAlly = new AllyNPC(292, 70, {
+    name: allyNPC.name,
+    color: allyNPC.color,
+    quotes: allyNPC.quotes,
+    variant: allyNPC.variant
+  });
+
+  cutsceneCtx.save();
+  cutsceneCtx.fillStyle = "#080a0d";
+  cutsceneCtx.fillRect(0, 0, cutsceneCanvas.width, cutsceneCanvas.height);
+  cutsceneCtx.fillStyle = "rgba(72, 209, 124, 0.12)";
+  cutsceneCtx.fillRect(0, 116, cutsceneCanvas.width, 2);
+  portraitPlayer.draw(cutsceneCtx);
+  portraitAlly.draw(cutsceneCtx);
+  cutsceneCtx.restore();
+}
+
+function showTermsModal(character, characterKey) {
+  audioManager.init();
+  pendingCharacter = character;
+  pendingCharacterKey = characterKey;
+  characterSelect.classList.add("is-hidden");
+  termsModal.style.display = "flex";
+  termsAcceptButton.focus();
+}
+
+function acceptTermsAndStart() {
+  if (!pendingCharacter) {
+    return;
+  }
+
+  const character = pendingCharacter;
+  const characterKey = pendingCharacterKey;
+  pendingCharacter = null;
+  pendingCharacterKey = "emerson";
+  termsModal.style.display = "none";
+  startGame(character, characterKey);
+}
+
+function startGame(character, characterKey = "emerson") {
   audioManager.init();
   currentCharacter = character;
+  currentCharacterKey = characterKey;
   currentLevel = 1;
   resetLevelState(character);
   characterSelect.classList.add("is-hidden");
+  termsModal.style.display = "none";
+  setInGameGlossaryVisible(true);
   canvas.focus();
   startGameLoop();
 }
@@ -1392,11 +2306,16 @@ function restartLevel() {
 
   audioManager.init();
   resetLevelState(currentCharacter);
+  setInGameGlossaryVisible(true);
   canvas.focus();
   startGameLoop();
 }
 
 function resetLevelState(character) {
+  cutsceneActive = false;
+  cutsceneUI.style.display = "none";
+  glossaryOpenedInGame = false;
+  glossaryModal.style.display = "none";
   loadLevel(currentLevel);
   player = new Player(character);
   gameEnded = false;
@@ -1438,12 +2357,16 @@ function startGameLoop() {
 
   gameStarted = true;
   lastTime = performance.now();
-  audioManager.playBGM();
+  if (currentLevel === 6 && !cutsceneActive) {
+    audioManager.playBossBGM();
+  } else if (currentLevel !== 6) {
+    audioManager.playBGM();
+  }
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function gameLoop(time) {
-  if (gameEnded) {
+  if (gameEnded || cutsceneActive) {
     return;
   }
 
@@ -1490,11 +2413,27 @@ function update(deltaTime) {
     allyNPC.update(deltaTime);
   }
 
+  if (bossCamera) {
+    bossCamera.update(deltaTime);
+  }
+
   for (const book of books) {
     book.update(deltaTime);
   }
 
   books = books.filter((book) => book.active);
+
+  for (const scroll of collectibleScrolls) {
+    scroll.update(deltaTime);
+
+    if (!scroll.collected && rectsOverlap(player, scroll.bounds)) {
+      scroll.collected = true;
+      unlockScroll(scroll.itemId);
+      audioManager.playWin();
+      statusMessage = "Pergaminho academico desbloqueado";
+      statusTimer = 1.8;
+    }
+  }
 
   for (const cookie of cookies) {
     cookie.update(deltaTime);
@@ -1544,6 +2483,10 @@ function update(deltaTime) {
 function draw() {
   drawBackground();
 
+  for (const scroll of collectibleScrolls) {
+    scroll.draw(ctx);
+  }
+
   for (const cookie of cookies) {
     cookie.draw(ctx);
   }
@@ -1564,6 +2507,10 @@ function draw() {
 
   for (const speaker of smartSpeakers) {
     speaker.draw(ctx);
+  }
+
+  if (bossCamera) {
+    bossCamera.draw(ctx);
   }
 
   for (const book of books) {
@@ -1618,11 +2565,9 @@ function finishGame(result) {
   gameEnded = true;
   lastGameResult = result;
   audioManager.stopBGM();
+  setInGameGlossaryVisible(false);
 
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-  }
+  pauseGameLoop();
 
   if (result === "victory") {
     audioManager.playWin();
@@ -1719,6 +2664,15 @@ function disableThreatTemporarily(threat) {
   }, 4000);
 }
 
+function isPlayerProtectedByAllyShield() {
+  return Boolean(
+    allyNPC &&
+    allyNPC.isShieldActive &&
+    allyNPC.isShieldActive() &&
+    rectsOverlap(player, allyNPC.getShieldBounds())
+  );
+}
+
 function drawBackground() {
   if (currentLevel === 3) {
     if (!digitalRain) {
@@ -1738,7 +2692,15 @@ function drawBackground() {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
   const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  if (currentLevel === 4) {
+  if (currentLevel === 6) {
+    gradient.addColorStop(0, "#09030b");
+    gradient.addColorStop(0.52, "#1c0710");
+    gradient.addColorStop(1, "#10070c");
+  } else if (currentLevel === 5) {
+    gradient.addColorStop(0, "#243b9f");
+    gradient.addColorStop(0.52, "#5a4fcf");
+    gradient.addColorStop(1, "#2f174a");
+  } else if (currentLevel === 4) {
     gradient.addColorStop(0, "#12071f");
     gradient.addColorStop(0.55, "#1b1230");
     gradient.addColorStop(1, "#25152f");
@@ -1754,9 +2716,13 @@ function drawBackground() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.strokeStyle = currentLevel === 4
-    ? "rgba(194, 59, 255, 0.12)"
-    : currentLevel === 2
+  ctx.strokeStyle = currentLevel === 6
+    ? "rgba(255, 42, 42, 0.12)"
+    : currentLevel === 5
+      ? "rgba(255, 176, 56, 0.14)"
+      : currentLevel === 4
+      ? "rgba(194, 59, 255, 0.12)"
+      : currentLevel === 2
       ? "rgba(124, 199, 255, 0.09)"
       : "rgba(88, 220, 190, 0.11)";
   ctx.lineWidth = 1;

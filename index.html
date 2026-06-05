@@ -15,6 +15,7 @@
       tabindex="0"
       aria-label="Área jogável de Incógnito: A Fuga do Algoritmo"
     ></canvas>
+    <button id="inGameGlossaryButton" class="in-game-glossary" type="button">Gloss&aacute;rio (G)</button>
 
     <section id="characterSelect" class="character-select" aria-labelledby="menuTitle">
       <div class="menu-panel">
@@ -24,17 +25,59 @@
 
         <div class="character-grid" role="group" aria-label="Seleção de personagem">
           <button class="character-card emerson" type="button" data-character="emerson">
-            <span class="avatar-preview" aria-hidden="true"></span>
+            <canvas id="preview-emerson" class="character-preview" width="40" height="50" aria-hidden="true"></canvas>
             <span class="character-name">Prof. Emerson</span>
           </button>
 
           <button class="character-card juliana" type="button" data-character="juliana">
-            <span class="avatar-preview" aria-hidden="true"></span>
+            <canvas id="preview-juliana" class="character-preview" width="40" height="50" aria-hidden="true"></canvas>
             <span class="character-name">Prof. Juliana</span>
           </button>
         </div>
+
+        <button id="glossaryButton" class="glossary-open" type="button">[ ACESSAR GLOSS&Aacute;RIO DA DISCIPLINA ]</button>
       </div>
     </section>
+
+    <div id="glossary-modal" class="glossary-modal" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
+      <div class="glossary-panel">
+        <p class="kicker">Pergaminhos Acad&ecirc;micos</p>
+        <h2 id="glossaryTitle">Gloss&aacute;rio da Disciplina</h2>
+        <div id="glossaryContent" class="glossary-content"></div>
+        <button id="glossaryCloseButton" class="end-button" type="button">Fechar / Voltar ao jogo</button>
+      </div>
+    </div>
+
+    <div id="terms-modal" class="terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
+      <div class="terms-panel">
+        <p class="kicker">Atualiza&ccedil;&atilde;o obrigat&oacute;ria da plataforma</p>
+        <h2 id="termsTitle">Termos de Rendi&ccedil;&atilde;o Incondicional de Dados</h2>
+
+        <div class="terms-contract" tabindex="0">
+          <p>Ao prosseguir, voc&ecirc; declara compreender que cada pausa, salto, hesita&ccedil;&atilde;o, desvio e aparente escolha livre poder&aacute; ser convertido em mat&eacute;ria-prima comportamental gratuita.</p>
+          <p>A Plataforma reserva-se o direito de observar padr&otilde;es, prever condutas e vender probabilidades de futuro a parceiros invis&iacute;veis, corretores de aten&ccedil;&atilde;o e mercados experimentais de antecipa&ccedil;&atilde;o.</p>
+          <p>Seu consentimento ser&aacute; considerado livre, informado e inevit&aacute;vel, inclusive nos casos em que a recusa demandar fric&ccedil;&atilde;o cognitiva, paci&ecirc;ncia documental ou localiza&ccedil;&atilde;o de links quase impercept&iacute;veis.</p>
+          <p>Voc&ecirc; reconhece que a extra&ccedil;&atilde;o de dados poder&aacute; ultrapassar o ambiente virtual e reinterpretar sua experi&ecirc;ncia como ativo preditivo, nos termos mais convenientes ao crescimento infinito da vigil&acirc;ncia.</p>
+          <p>Ao aceitar, voc&ecirc; autoriza a transforma&ccedil;&atilde;o de seu comportamento em produto, a redu&ccedil;&atilde;o de sua privacidade em indicador operacional e o uso da sua autonomia como insumo de otimiza&ccedil;&atilde;o.</p>
+        </div>
+
+        <button id="termsAcceptButton" class="terms-accept" type="button">[ LI E ACEITO DOAR MINHA ALMA DIGITAL ]</button>
+        <a id="termsRejectLink" class="terms-reject" href="#">[ Prefiro a fric&ccedil;&atilde;o (rejeitar cookies) ]</a>
+      </div>
+    </div>
+
+    <div id="cutscene-ui" class="cutscene-overlay" role="dialog" aria-modal="true" aria-labelledby="cutsceneSpeaker">
+      <div class="cutscene-panel">
+        <canvas id="cutsceneCanvas" width="420" height="160" aria-label="Retratos dos personagens na conversa"></canvas>
+        <div class="dialogue-box">
+          <p id="cutsceneSpeaker" class="dialogue-speaker">Personagem</p>
+          <p id="cutsceneText" class="dialogue-text">Dialogo</p>
+          <button id="cutsceneNextButton" class="end-button" type="button">Avan&ccedil;ar</button>
+          <p class="dialogue-hint">Pressione Espa&ccedil;o para avan&ccedil;ar</p>
+        </div>
+      </div>
+    </div>
+
     <div id="victoryOverlay" class="end-overlay victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
       <div class="end-panel">
         <p class="kicker">Servidor Seguro</p>
