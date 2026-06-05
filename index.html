@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incógnito: A Fuga do Algoritmo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell" aria-label="Incógnito: A Fuga do Algoritmo">
+    <canvas
+      id="gameCanvas"
+      width="960"
+      height="540"
+      tabindex="0"
+      aria-label="Área jogável de Incógnito: A Fuga do Algoritmo"
+    ></canvas>
+
+    <section id="characterSelect" class="character-select" aria-labelledby="menuTitle">
+      <div class="menu-panel">
+        <p class="kicker">Capitalismo de Vigilância</p>
+        <h1 id="menuTitle">Incógnito: A Fuga do Algoritmo</h1>
+        <p class="menu-copy">Escolha quem atravessa o Vale do Feed.</p>
+
+        <div class="character-grid" role="group" aria-label="Seleção de personagem">
+          <button class="character-card emerson" type="button" data-character="emerson">
+            <span class="avatar-preview" aria-hidden="true"></span>
+            <span class="character-name">Prof. Emerson</span>
+          </button>
+
+          <button class="character-card juliana" type="button" data-character="juliana">
+            <span class="avatar-preview" aria-hidden="true"></span>
+            <span class="character-name">Prof. Juliana</span>
+          </button>
+        </div>
+      </div>
+    </section>
+    <div id="victoryOverlay" class="end-overlay victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+      <div class="end-panel">
+        <p class="kicker">Servidor Seguro</p>
+        <h2 id="victoryTitle">Fase Conclu&iacute;da: Voc&ecirc; escapou do Feed!</h2>
+        <blockquote class="academic-quote">
+          <p id="victoryQuoteText">A privacidade n&atilde;o &eacute; privada; &eacute; a pr&oacute;pria base que nos permite ter uma sociedade justa e o direito ao santu&aacute;rio interior.</p>
+          <cite id="victoryQuoteAuthor">Shoshana Zuboff</cite>
+        </blockquote>
+        <button id="nextPhaseButton" class="end-button" type="button">Recome&ccedil;ar / Pr&oacute;xima Fase</button>
+      </div>
+    </div>
+
+    <div id="defeatOverlay" class="end-overlay defeat-overlay" role="dialog" aria-modal="true" aria-labelledby="defeatTitle">
+      <div class="end-panel">
+        <p class="kicker">Dados Vazados</p>
+        <h2 id="defeatTitle">Game Over: Dados Completamente Extra&iacute;dos</h2>
+        <blockquote class="academic-quote">
+          <p id="defeatQuoteText">O capitalismo de vigil&acirc;ncia reivindica unilateralmente a experi&ecirc;ncia humana como mat&eacute;ria-prima gratuita para tradu&ccedil;&atilde;o em dados comportamentais.</p>
+          <cite id="defeatQuoteAuthor">Shoshana Zuboff</cite>
+        </blockquote>
+        <button id="retryButton" class="end-button danger" type="button">Tentar Novamente</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
