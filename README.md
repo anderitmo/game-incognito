@@ -8,7 +8,7 @@ https://anderitmo.github.io/game-incognito/
 ![Status](https://img.shields.io/badge/Status-Em%20Desenvolvimento-brightgreen)
 ![Tech](https://img.shields.io/badge/Tecnologia-HTML5%20Canvas%20%7C%20Vanilla%20JS-blue)
 
-[Jogue online ](https://anderitmo.github.io/game-incognito/).
+[Jogue online ](https://anderitmo.github.io/game-incognito/)
 
 ## 📖 Sobre o Projeto
 
