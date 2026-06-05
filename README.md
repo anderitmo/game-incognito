@@ -9,17 +9,11 @@
 
 ## 📖 Sobre o Projeto
 
-**Incógnito** é um jogo de plataforma 2D executável direto no navegador, desenvolvido como um projeto prático para o programa de Mestrado em "Sociedade, Tecnologia e Informação". O objetivo principal é traduzir conceitos acadêmicos complexos — como o **Capitalismo de Vigilância** de Shoshana Zuboff, a Cultura Técnica e a Tecno-estética — em mecânicas interativas de *Game Design*.
+**Incógnito** é um jogo de plataforma 2D executável direto no navegador, desenvolvido como um projeto prático para a disciplinas **Sociedade, Trabalho e Educação** do **Programa de Pós-graduação Profissional em Gestão e Desenvolvimento da Educação Profissional** ministrados pelos docentes Prof. Dr. Emerson Freire e Profa. Dra. Juliana Augusta Verona.
+
+O objetivo principal é traduzir conceitos acadêmicos complexos — como o **Capitalismo de Vigilância** de Shoshana Zuboff, a Cultura Técnica e a Tecno-estética — em mecânicas interativas de *Game Design*.
 
 Neste jogo, as regras clássicas dos videogames são subvertidas: coletar itens brilhantes não garante pontos, mas sim a extração massiva dos seus dados pessoais por *Big Techs*.
-
----
-
-## 📸 Demonstração
-
-*(Adicione aqui imagens ou GIFs do seu jogo)*
-* `![Tela Inicial](link-da-imagem)`
-* `![Gameplay Fase 2](link-da-imagem)`
 
 ---
 
