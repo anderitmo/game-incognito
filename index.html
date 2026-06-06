@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Incógnito: A Fuga do Algoritmo</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -18,13 +18,13 @@
     <button id="inGameGlossaryButton" class="in-game-glossary" type="button">Refer&ecirc;ncias (G)</button>
     <button id="fullscreenButton" class="fullscreen-btn" type="button">⛶ Tela Cheia</button>
 
-    <div id="mobileControls" class="mobile-controls">
+    <div id="mobileControls" class="mobile-controls" aria-hidden="true">
       <div class="d-pad">
-        <button id="btnLeft" class="touch-btn" aria-label="Esquerda">◀</button>
-        <button id="btnRight" class="touch-btn" aria-label="Direita">▶</button>
+        <button id="btnLeft" class="touch-btn" type="button" aria-label="Esquerda" aria-pressed="false">&larr;</button>
+        <button id="btnRight" class="touch-btn" type="button" aria-label="Direita" aria-pressed="false">&rarr;</button>
       </div>
       <div class="action-pad">
-        <button id="btnJump" class="touch-btn" aria-label="Pular">▲ Pular</button>
+        <button id="btnJump" class="touch-btn" type="button" aria-label="Pular" aria-pressed="false">&uarr; Pular</button>
       </div>
     </div>
 

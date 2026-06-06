@@ -7,6 +7,10 @@ const termsRejectLink = document.getElementById("termsRejectLink");
 const glossaryButton = document.getElementById("glossaryButton");
 const inGameGlossaryButton = document.getElementById("inGameGlossaryButton");
 const fullscreenButton = document.getElementById("fullscreenButton");
+const mobileControls = document.getElementById("mobileControls");
+const btnLeft = document.getElementById("btnLeft");
+const btnRight = document.getElementById("btnRight");
+const btnJump = document.getElementById("btnJump");
 const glossaryModal = document.getElementById("glossary-modal");
 const glossaryContent = document.getElementById("glossaryContent");
 const glossaryCloseButton = document.getElementById("glossaryCloseButton");
@@ -535,6 +539,11 @@ function drawCharacter(context, x, y, width, height, characterName) {
   const bodyTop = height * 0.45;
   const bodyBottom = height * 0.9;
   const headRadius = Math.min(width * 0.35, height * 0.22);
+  const hairColor = isJuliana
+    ? "#f1c94f"
+    : isCeli
+    ? "#f7f9ff"
+    : palette.shoe;
 
   // Helper for Native roundRect with fallback
   const drawRoundedRect = (cx, cy, cw, ch, r) => {
@@ -690,6 +699,26 @@ function drawCharacter(context, x, y, width, height, characterName) {
   context.arc(centerX, headY, headRadius, 0, Math.PI * 2);
   context.fill();
 
+  if (isRodrigo) {
+    const beardColor = "#4a2f22";
+
+    context.fillStyle = beardColor;
+    context.beginPath();
+    context.moveTo(centerX - headRadius * 0.76, headY + headRadius * 0.16);
+    context.quadraticCurveTo(centerX - headRadius * 0.98, headY + headRadius * 0.72, centerX - headRadius * 0.5, headY + headRadius * 1.14);
+    context.quadraticCurveTo(centerX - headRadius * 0.24, headY + headRadius * 1.48, centerX, headY + headRadius * 1.62);
+    context.quadraticCurveTo(centerX + headRadius * 0.24, headY + headRadius * 1.48, centerX + headRadius * 0.5, headY + headRadius * 1.14);
+    context.quadraticCurveTo(centerX + headRadius * 0.98, headY + headRadius * 0.72, centerX + headRadius * 0.76, headY + headRadius * 0.16);
+    context.quadraticCurveTo(centerX + headRadius * 0.34, headY + headRadius * 0.44, centerX, headY + headRadius * 0.48);
+    context.quadraticCurveTo(centerX - headRadius * 0.34, headY + headRadius * 0.44, centerX - headRadius * 0.76, headY + headRadius * 0.16);
+    context.fill();
+
+    context.fillStyle = palette.skin;
+    context.beginPath();
+    context.ellipse(centerX, headY + headRadius * 0.18, headRadius * 0.36, headRadius * 0.16, 0, 0, Math.PI * 2);
+    context.fill();
+  }
+
   context.fillStyle = "#2b2b2b";
   const eyeOffset = width * 0.12;
   const eyeRadius = Math.max(2, width * 0.05);
@@ -719,10 +748,19 @@ function drawCharacter(context, x, y, width, height, characterName) {
     context.arc(centerX + width * 0.2, headY - headRadius * 1.1, width * 0.05, 0, Math.PI * 2);
     context.fill();
   } else if (!isRodrigo) {
-    context.fillStyle = palette.shoe;
+    context.fillStyle = hairColor;
     context.beginPath();
     context.arc(centerX, headY - headRadius * 0.2, headRadius + 2, Math.PI * 0.9, Math.PI * 2.1);
     context.fill();
+
+    if (isCeli) {
+      context.strokeStyle = "#d4dbe6";
+      context.lineWidth = Math.max(1, width * 0.035);
+      context.beginPath();
+      context.arc(centerX, headY - headRadius * 0.23, headRadius + 1, Math.PI * 1.02, Math.PI * 1.98);
+      context.stroke();
+    }
+
     if (isJuliana || isMyllena || isViviane || isCeli) {
       drawRoundedRect(centerX - headRadius - 2, headY - height * 0.05, width * 0.15, height * 0.3, width * 0.05);
       context.fill();
@@ -846,6 +884,8 @@ function openGlossary(fromGame = false) {
   glossaryOpenedInGame = fromGame;
 
   if (fromGame) {
+    clearAllInput(true);
+    setMobileControlsVisible(false);
     pauseGameLoop();
   }
 
@@ -869,6 +909,8 @@ function closeGlossary() {
 }
 
 function pauseGameLoop() {
+  setMobileControlsVisible(false);
+
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
@@ -877,6 +919,85 @@ function pauseGameLoop() {
 
 function setInGameGlossaryVisible(visible) {
   inGameGlossaryButton.classList.toggle("is-visible", visible);
+}
+
+function setTouchButtonPressed(control, pressed) {
+  const button = touchButtons[control];
+
+  if (!button) {
+    return;
+  }
+
+  button.classList.toggle("is-active", pressed);
+  button.setAttribute("aria-pressed", String(pressed));
+}
+
+function updateTouchButtonState(control) {
+  setTouchButtonPressed(control, touchInput[control].size > 0);
+}
+
+function cutPlayerJump() {
+  if (player && player.vy < -180) {
+    player.vy *= 0.5;
+  }
+}
+
+function clearTouchInput(cutJump = false) {
+  const hadJump = touchInput.jump.size > 0;
+
+  touchInput.left.clear();
+  touchInput.right.clear();
+  touchInput.jump.clear();
+  updateTouchButtonState("left");
+  updateTouchButtonState("right");
+  updateTouchButtonState("jump");
+
+  if (cutJump && hadJump) {
+    cutPlayerJump();
+  }
+}
+
+function clearAllInput(cutJump = false) {
+  keys.clear();
+  clearTouchInput(cutJump);
+}
+
+function canShowMobileControlsInViewport() {
+  return (
+    window.matchMedia("(pointer: coarse) and (orientation: landscape)").matches ||
+    window.matchMedia("(orientation: landscape) and (max-width: 1024px) and (max-height: 500px)").matches
+  );
+}
+
+function setMobileControlsVisible(visible) {
+  if (!mobileControls) {
+    return;
+  }
+
+  const shouldShow = visible && canShowMobileControlsInViewport();
+
+  mobileControls.classList.toggle("is-visible", shouldShow);
+  mobileControls.setAttribute("aria-hidden", String(!shouldShow));
+
+  if (!shouldShow) {
+    clearTouchInput(true);
+  }
+}
+
+function refreshMobileControlsVisibility() {
+  const gameplaySurfaceActive = (
+    gameStarted &&
+    !gameEnded &&
+    !cutsceneActive &&
+    glossaryModal.style.display !== "flex" &&
+    termsModal.style.display !== "flex" &&
+    studentSelectionScreen.style.display !== "flex" &&
+    victoryOverlay.style.display !== "flex" &&
+    defeatOverlay.style.display !== "flex" &&
+    graduationScreen.style.display !== "flex"
+  );
+
+  setMobileControlsVisible(gameplaySurfaceActive);
 }
 
 const PHYSICS = {
@@ -902,6 +1023,16 @@ const QUALIFICATION_STUDENT_TEXT = "O momento mais temido chegou: A Banca de Qua
 const FINAL_DEFENSE_STUDENT_TEXT = "A Defesa Final! A banca est\u00e1 implac\u00e1vel. Sobreviva \u00e0s cr\u00edticas, navegue pelo racioc\u00ednio inst\u00e1vel e entregue os 4 cap\u00edtulos finais da sua pesquisa!";
 
 const keys = new Set();
+const touchInput = {
+  left: new Set(),
+  right: new Set(),
+  jump: new Set()
+};
+const touchButtons = {
+  left: btnLeft,
+  right: btnRight,
+  jump: btnJump
+};
 let player = null;
 let currentLevel = 1;
 let gameStarted = false;
@@ -2542,6 +2673,55 @@ loadLevel(currentLevel);
 renderPreviews();
 renderStudentPreviews();
 
+function pressTouchControl(control, pointerId) {
+  touchInput[control].add(pointerId);
+  updateTouchButtonState(control);
+}
+
+function releaseTouchControl(control, pointerId) {
+  const wasPressed = touchInput[control].delete(pointerId);
+  updateTouchButtonState(control);
+
+  if (control === "jump" && wasPressed && touchInput.jump.size === 0) {
+    cutPlayerJump();
+  }
+}
+
+function bindTouchControl(button, control) {
+  if (!button) {
+    return;
+  }
+
+  button.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    pressTouchControl(control, event.pointerId);
+
+    if (typeof canvas.focus === "function") {
+      canvas.focus({ preventScroll: true });
+    }
+  });
+
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => {
+    button.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      releaseTouchControl(control, event.pointerId);
+    });
+  });
+
+  button.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+}
+
+bindTouchControl(btnLeft, "left");
+bindTouchControl(btnRight, "right");
+bindTouchControl(btnJump, "jump");
+
 glossaryButton.addEventListener("click", () => {
   openGlossary(false);
 });
@@ -2686,10 +2866,24 @@ window.addEventListener("keyup", (event) => {
     return;
   }
 
-  if (["arrowup", "w", " "].includes(normalized) && player && player.vy < -180) {
+  if (["arrowup", "w", " "].includes(normalized)) {
     // Corte de pulo: soltar o botao reduz a subida e da controle fino de altura.
-    player.vy *= 0.5;
+    cutPlayerJump();
   }
+});
+
+window.addEventListener("blur", () => {
+  clearAllInput(true);
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    clearAllInput(true);
+  }
+});
+
+window.addEventListener("resize", () => {
+  refreshMobileControlsVisibility();
 });
 
 function loadLevel(level) {
@@ -3161,6 +3355,7 @@ function advanceCutscene() {
 function endBossCutscene() {
   cutsceneActive = false;
   cutsceneUI.style.display = "none";
+  refreshMobileControlsVisibility();
   canvas.focus();
   lastTime = performance.now();
   audioManager.playBossBGM();
@@ -3194,6 +3389,8 @@ function renderCutscenePortraits() {
 
 function showTermsModal(character, characterKey) {
   audioManager.init();
+  clearAllInput(true);
+  setMobileControlsVisible(false);
   pendingCharacter = character;
   pendingCharacterKey = characterKey;
   characterSelect.classList.add("is-hidden");
@@ -3216,6 +3413,8 @@ function acceptTermsAndStart() {
 
 function showStudentSelectionScreen(targetLevel = 7, instructionText = QUALIFICATION_STUDENT_TEXT, title = "Banca de Qualifica\u00e7\u00e3o") {
   hideEndOverlays();
+  clearAllInput(true);
+  setMobileControlsVisible(false);
   pendingStudentLevel = targetLevel;
   studentSelectionTitle.innerText = title;
   studentInstructionText.innerText = instructionText;
@@ -3319,6 +3518,8 @@ function restartLevel() {
 }
 
 function resetLevelState(character) {
+  clearAllInput(true);
+  setMobileControlsVisible(false);
   cutsceneActive = false;
   cutsceneUI.style.display = "none";
   glossaryOpenedInGame = false;
@@ -3370,6 +3571,7 @@ function startGameLoop() {
   } else if (currentLevel !== 6) {
     audioManager.playBGM();
   }
+  refreshMobileControlsVisibility();
   animationFrameId = requestAnimationFrame(gameLoop);
 }
 
@@ -3776,7 +3978,9 @@ function finishGame(result, customDefeatMessage = "") {
   gameEnded = true;
   lastGameResult = result;
   audioManager.stopBGM();
+  clearAllInput(true);
   setInGameGlossaryVisible(false);
+  setMobileControlsVisible(false);
 
   pauseGameLoop();
 
@@ -3813,7 +4017,9 @@ function finishGraduation() {
   gameEnded = true;
   lastGameResult = "graduation";
   audioManager.stopBGM();
+  clearAllInput(true);
   setInGameGlossaryVisible(false);
+  setMobileControlsVisible(false);
   pauseGameLoop();
 
   const studentName = currentCharacter?.name || "ORIENTANDO";
@@ -4261,15 +4467,15 @@ function wrapCanvasText(context, text, maxWidth) {
 }
 
 function wasJumpRequested() {
-  return keys.has("arrowup") || keys.has("w") || keys.has(" ");
+  return keys.has("arrowup") || keys.has("w") || keys.has(" ") || touchInput.jump.size > 0;
 }
 
 function isLeftPressed() {
-  return keys.has("arrowleft") || keys.has("a");
+  return keys.has("arrowleft") || keys.has("a") || touchInput.left.size > 0;
 }
 
 function isRightPressed() {
-  return keys.has("arrowright") || keys.has("d");
+  return keys.has("arrowright") || keys.has("d") || touchInput.right.size > 0;
 }
 
 function normalizeKey(key) {
