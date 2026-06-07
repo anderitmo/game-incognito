@@ -23,12 +23,12 @@
 
     <div id="mobileControls" class="mobile-controls" aria-hidden="true">
       <div class="d-pad">
-        <button id="btnLeft" class="touch-btn" type="button" aria-label="Esquerda" aria-pressed="false">&larr;</button>
-        <button id="btnRight" class="touch-btn" type="button" aria-label="Direita" aria-pressed="false">&rarr;</button>
+        <button id="btnLeft" class="touch-btn" type="button" aria-label="Esquerda" aria-pressed="false">←</button>
+        <button id="btnRight" class="touch-btn" type="button" aria-label="Direita" aria-pressed="false">→</button>
       </div>
       <div class="action-pad">
-        <button id="btnJump" class="touch-btn" type="button" aria-label="Pular" aria-pressed="false">&uarr; Pular</button>
-        <button id="btnDrop" class="touch-btn" type="button" aria-label="Soltar cap&iacute;tulo" aria-hidden="true">Soltar cap&iacute;tulo</button>
+        <button id="btnJump" class="touch-btn" type="button" aria-label="Pular" aria-pressed="false">↑ Pular</button>
+        <button id="btnDrop" class="touch-btn" type="button" aria-label="Soltar capítulo" aria-hidden="true">Soltar capítulo</button>
       </div>
     </div>
 
@@ -46,18 +46,18 @@
 
           <button class="character-card juliana" type="button" data-character="juliana">
             <canvas id="preview-juliana" class="character-preview" width="40" height="50" aria-hidden="true"></canvas>
-            <span class="character-name">Prof. Juliana</span>
+            <span class="character-name">Profa. Juliana</span>
           </button>
         </div>
 
-        <button id="glossaryButton" class="glossary-open" type="button">[ ACESSAR REFER&Ecirc;NCIAS DA DISCIPLINA ]</button>
+        <button id="glossaryButton" class="glossary-open" type="button">[ ACESSAR REFERÊNCIAS DA DISCIPLINA ]</button>
       </div>
     </section>
 
     <div id="glossary-modal" class="glossary-modal" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
       <div class="glossary-panel">
-        <p class="kicker">Pergaminhos de Refer&ecirc;ncias</p>
-        <h2 id="glossaryTitle">Refer&ecirc;ncias da Disciplina</h2>
+        <p class="kicker">Pergaminhos de Referências</p>
+        <h2 id="glossaryTitle">Referências da Disciplina</h2>
         <div id="glossaryContent" class="glossary-content"></div>
         <button id="glossaryCloseButton" class="end-button" type="button">Fechar / Voltar ao jogo</button>
       </div>
@@ -66,7 +66,7 @@
     <div id="referenceCaptureOverlay" class="reference-capture-overlay" role="dialog" aria-modal="true" aria-labelledby="referenceCaptureTitle">
       <div class="reference-capture-panel">
         <p class="kicker">Pergaminho capturado</p>
-        <h2 id="referenceCaptureTitle">Refer&ecirc;ncia desbloqueada</h2>
+        <h2 id="referenceCaptureTitle">Referência desbloqueada</h2>
         <article class="captured-reference-card">
           <p id="referenceCaptureAuthor" class="captured-reference-author"></p>
           <p id="referenceCaptureText" class="captured-reference-title"></p>
@@ -77,19 +77,19 @@
 
     <div id="terms-modal" class="terms-modal" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
       <div class="terms-panel">
-        <p class="kicker">Atualiza&ccedil;&atilde;o obrigat&oacute;ria da plataforma</p>
-        <h2 id="termsTitle">Termos de Rendi&ccedil;&atilde;o Incondicional de Dados</h2>
+        <p class="kicker">Atualização obrigatória da plataforma</p>
+        <h2 id="termsTitle">Termos de Rendição Incondicional de Dados</h2>
 
         <div class="terms-contract" tabindex="0">
-          <p>Ao prosseguir, voc&ecirc; declara compreender que cada pausa, salto, hesita&ccedil;&atilde;o, desvio e aparente escolha livre poder&aacute; ser convertido em mat&eacute;ria-prima comportamental gratuita.</p>
-          <p>A Plataforma reserva-se o direito de observar padr&otilde;es, prever condutas e vender probabilidades de futuro a parceiros invis&iacute;veis, corretores de aten&ccedil;&atilde;o e mercados experimentais de antecipa&ccedil;&atilde;o.</p>
-          <p>Seu consentimento ser&aacute; considerado livre, informado e inevit&aacute;vel, inclusive nos casos em que a recusa demandar fric&ccedil;&atilde;o cognitiva, paci&ecirc;ncia documental ou localiza&ccedil;&atilde;o de links quase impercept&iacute;veis.</p>
-          <p>Voc&ecirc; reconhece que a extra&ccedil;&atilde;o de dados poder&aacute; ultrapassar o ambiente virtual e reinterpretar sua experi&ecirc;ncia como ativo preditivo, nos termos mais convenientes ao crescimento infinito da vigil&acirc;ncia.</p>
-          <p>Ao aceitar, voc&ecirc; autoriza a transforma&ccedil;&atilde;o de seu comportamento em produto, a redu&ccedil;&atilde;o de sua privacidade em indicador operacional e o uso da sua autonomia como insumo de otimiza&ccedil;&atilde;o.</p>
+          <p>Ao prosseguir, você declara compreender que cada pausa, salto, hesitação, desvio e aparente escolha livre poderá ser convertido em matéria-prima comportamental gratuita.</p>
+          <p>A Plataforma reserva-se o direito de observar padrões, prever condutas e vender probabilidades de futuro a parceiros invisíveis, corretores de atenção e mercados experimentais de antecipação.</p>
+          <p>Seu consentimento será considerado livre, informado e inevitável, inclusive nos casos em que a recusa demandar fricção cognitiva, paciência documental ou localização de links quase imperceptíveis.</p>
+          <p>Você reconhece que a extração de dados poderá ultrapassar o ambiente virtual e reinterpretar sua experiência como ativo preditivo, nos termos mais convenientes ao crescimento infinito da vigilância.</p>
+          <p>Ao aceitar, você autoriza a transformação de seu comportamento em produto, a redução de sua privacidade em indicador operacional e o uso da sua autonomia como insumo de otimização.</p>
         </div>
 
         <button id="termsAcceptButton" class="terms-accept" type="button">[ LI E ACEITO DOAR MINHA ALMA DIGITAL ]</button>
-        <a id="termsRejectLink" class="terms-reject" href="#">[ Prefiro a fric&ccedil;&atilde;o (rejeitar cookies) ]</a>
+        <a id="termsRejectLink" class="terms-reject" href="#">[ Prefiro a fricção (rejeitar cookies) ]</a>
       </div>
     </div>
 
@@ -98,20 +98,20 @@
         <canvas id="cutsceneCanvas" width="420" height="160" aria-label="Retratos dos personagens na conversa"></canvas>
         <div class="dialogue-box">
           <p id="cutsceneSpeaker" class="dialogue-speaker">Personagem</p>
-          <p id="cutsceneText" class="dialogue-text">Dialogo</p>
-          <button id="cutsceneNextButton" class="end-button" type="button">Avan&ccedil;ar</button>
-          <p class="dialogue-hint">Pressione Espa&ccedil;o para avan&ccedil;ar</p>
+          <p id="cutsceneText" class="dialogue-text">Diálogo</p>
+          <button id="cutsceneNextButton" class="end-button" type="button">Avançar</button>
+          <p class="dialogue-hint">Pressione Espaço para avançar</p>
         </div>
       </div>
     </div>
 
     <section id="student-selection-screen" class="student-selection-screen" aria-labelledby="studentSelectionTitle">
       <div class="student-panel">
-        <p class="kicker">Intermiss&atilde;o</p>
-        <h2 id="studentSelectionTitle">Banca de Qualifica&ccedil;&atilde;o</h2>
-        <p class="student-copy">O momento mais temido chegou: A Banca de Qualifica&ccedil;&atilde;o! Cada professor exige um conceito espec&iacute;fico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para n&atilde;o errar o autor na frente da banca!</p>
+        <p class="kicker">Intermissão</p>
+        <h2 id="studentSelectionTitle">Banca de Qualificação</h2>
+        <p class="student-copy">O momento mais temido chegou: A Banca de Qualificação! Cada professor exige um conceito específico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para não errar o autor na frente da banca!</p>
 
-        <div class="student-grid" role="group" aria-label="Sele&ccedil;&atilde;o de orientando">
+        <div class="student-grid" role="group" aria-label="Seleção de orientando">
           <button class="student-card" type="button" data-student="anderson">
             <canvas id="student-preview-anderson" class="student-preview" width="40" height="50" aria-hidden="true"></canvas>
             <span>Anderson</span>
@@ -139,21 +139,21 @@
     <div id="victoryOverlay" class="end-overlay victory-overlay" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
       <div class="end-panel">
         <p class="kicker">Servidor Seguro</p>
-        <h2 id="victoryTitle">Fase Conclu&iacute;da: Voc&ecirc; escapou do Feed!</h2>
+        <h2 id="victoryTitle">Fase Concluída: Você escapou do Feed!</h2>
         <blockquote class="academic-quote">
-          <p id="victoryQuoteText">A privacidade n&atilde;o &eacute; privada; &eacute; a pr&oacute;pria base que nos permite ter uma sociedade justa e o direito ao santu&aacute;rio interior.</p>
+          <p id="victoryQuoteText">A privacidade não é privada; é a própria base que nos permite ter uma sociedade justa e o direito ao santuário interior.</p>
           <cite id="victoryQuoteAuthor">Shoshana Zuboff</cite>
         </blockquote>
-        <button id="nextPhaseButton" class="end-button" type="button">Recome&ccedil;ar / Pr&oacute;xima Fase</button>
+        <button id="nextPhaseButton" class="end-button" type="button">Recomeçar / Próxima Fase</button>
       </div>
     </div>
 
     <div id="defeatOverlay" class="end-overlay defeat-overlay" role="dialog" aria-modal="true" aria-labelledby="defeatTitle">
       <div class="end-panel">
         <p class="kicker">Dados Vazados</p>
-        <h2 id="defeatTitle">Game Over: Dados Completamente Extra&iacute;dos</h2>
+        <h2 id="defeatTitle">Game Over: Dados Completamente Extraídos</h2>
         <blockquote class="academic-quote">
-          <p id="defeatQuoteText">O capitalismo de vigil&acirc;ncia reivindica unilateralmente a experi&ecirc;ncia humana como mat&eacute;ria-prima gratuita para tradu&ccedil;&atilde;o em dados comportamentais.</p>
+          <p id="defeatQuoteText">O capitalismo de vigilância reivindica unilateralmente a experiência humana como matéria-prima gratuita para tradução em dados comportamentais.</p>
           <cite id="defeatQuoteAuthor">Shoshana Zuboff</cite>
         </blockquote>
         <button id="retryButton" class="end-button danger" type="button">Tentar Novamente</button>
@@ -162,12 +162,12 @@
 
     <div id="graduation-screen" class="graduation-screen" role="dialog" aria-modal="true" aria-labelledby="graduationTitle">
       <div class="graduation-panel">
-        <p class="kicker">Titula&ccedil;&atilde;o</p>
+        <p class="kicker">Titulação</p>
         <h2 id="graduationTitle">CERTIFICADO DE MESTRADO</h2>
-        <p id="graduationText" class="graduation-text">O Programa de P&oacute;s-gradua&ccedil;&atilde;o concede o t&iacute;tulo de Mestre.</p>
+        <p id="graduationText" class="graduation-text">O Programa de Pós-graduação concede o título de Mestre.</p>
         <div class="graduation-actions">
           <button id="journeyRestartButton" class="end-button" type="button">Reiniciar Jornada</button>
-          <button id="creditsButton" class="end-button secondary" type="button">Ver Cr&eacute;ditos</button>
+          <button id="creditsButton" class="end-button secondary" type="button">Ver Créditos</button>
         </div>
       </div>
     </div>

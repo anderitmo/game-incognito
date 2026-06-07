@@ -48,36 +48,36 @@ const HEIGHT = canvas.height;
 
 // Bordoes do Prof. Emerson. Adicione novos bordoes do Emerson aqui.
 const bordoesEmerson = [
-  "Nossa, como e mesmo o nome daquele livro?",
+  "Nossa, como é mesmo o nome daquele livro?",
   "Do que eu estava falando mesmo?"
 ];
 
-// Bordoes da Prof. Juliana. Adicione novos bordoes da Juliana aqui.
+// Bordões da Profa. Juliana. Adicione novos bordões da Juliana aqui.
 const bordoesJuliana = [
   "Como eu sou geografa, vou puxar para o meu lado..."
 ];
 
-// Bordoes da Prof. Celi. Adicione novos bordoes da Celi aqui.
+// Bordões da Profa. Celi. Adicione novos bordões da Celi aqui.
 const bordoesCeli = [
   "Pergunte ao seu orientador!"
 ];
 
-// Bordoes do Prof. Giordano. Adicione novos bordoes do Giordano aqui.
+// Bordões do Prof. Giordano. Adicione novos bordões do Giordano aqui.
 const bordoesGiordano = [
   "Se eu estiver na sua banca eu vou perguntar!"
 ];
 
 const quotesDefeat = [
   {
-    text: "O capitalismo de vigilancia transforma a experiencia humana em materia-prima para dados comportamentais.",
+    text: "O capitalismo de vigilância transforma a experiência humana em matéria-prima para dados comportamentais.",
     author: "Shoshana Zuboff"
   },
   {
-    text: "Quando a experiencia privada vira insumo gratuito, a autonomia perde terreno para a predicao.",
+    text: "Quando a experiência privada vira insumo gratuito, a autonomia perde terreno para a predição.",
     author: "Shoshana Zuboff"
   },
   {
-    text: "A extracao de dados prospera quando nossas escolhas sao monitoradas antes mesmo de serem compreendidas por nos.",
+    text: "A extração de dados prospera quando nossas escolhas são monitoradas antes mesmo de serem compreendidas por nós.",
     author: "Shoshana Zuboff"
   },
   {
@@ -88,19 +88,19 @@ const quotesDefeat = [
 
 const quotesVictory = [
   {
-    text: "A resistencia comeca quando recusamos que a experiencia humana seja tratada como recurso disponivel.",
+    text: "A resistência começa quando recusamos que a experiência humana seja tratada como recurso disponível.",
     author: "Shoshana Zuboff"
   },
   {
-    text: "Defender a privacidade e defender o espaco necessario para pensar, escolher e agir com autonomia.",
+    text: "Defender a privacidade é defender o espaço necessário para pensar, escolher e agir com autonomia.",
     author: "Shoshana Zuboff"
   },
   {
-    text: "A emancipacao digital exige limites democraticos para sistemas que procuram prever e modificar condutas.",
+    text: "A emancipação digital exige limites democráticos para sistemas que procuram prever e modificar condutas.",
     author: "Shoshana Zuboff"
   },
   {
-    text: "Recuperar o direito ao futuro significa resistir a mercados que transformam comportamento em certeza vendavel.",
+    text: "Recuperar o direito ao futuro significa resistir a mercados que transformam comportamento em certeza vendável.",
     author: "Shoshana Zuboff"
   }
 ];
@@ -109,17 +109,17 @@ const referenciasData = [
   {
     id: 1,
     autor: "SAVIANI, Demerval",
-    titulo: "Trabalho e educa\u00e7\u00e3o: fundamentos ontol\u00f3gicos e hist\u00f3ricos."
+    titulo: "Trabalho e educação: fundamentos ontológicos e históricos."
   },
   {
     id: 2,
     autor: "NOSELLA, Paolo",
-    titulo: "A educa\u00e7\u00e3o no S\u00e9culo XXI: integrar trabalho e tempo livre."
+    titulo: "A educação no Século XXI: integrar trabalho e tempo livre."
   },
   {
     id: 3,
     autor: "MANFREDI, S.M.",
-    titulo: "Educa\u00e7\u00e3o profissional no Brasil: atores e cen\u00e1rios."
+    titulo: "Educação profissional no Brasil: atores e cenários."
   },
   {
     id: 4,
@@ -129,27 +129,27 @@ const referenciasData = [
   {
     id: 5,
     autor: "FOUCAULT, Michel",
-    titulo: "Nascimento da Biopol\u00edtica."
+    titulo: "Nascimento da Biopolítica."
   },
   {
     id: 6,
-    autor: "CHAMAYOU, Gr\u00e9goire",
-    titulo: "A sociedade ingovern\u00e1vel."
+    autor: "CHAMAYOU, Grégoire",
+    titulo: "A sociedade ingovernável."
   },
   {
     id: 7,
     autor: "LAVAL, Christian",
-    titulo: "A Escola n\u00e3o \u00e9 uma empresa."
+    titulo: "A Escola não é uma empresa."
   },
   {
     id: 8,
     autor: "ALYS, Francis",
-    titulo: "Paradoja de la praxis."
+    titulo: "Paradoja de la práxis."
   },
   {
     id: 9,
     autor: "FREIRE, Emerson",
-    titulo: "'Faltam-nos poetas t\u00e9cnicos': em dire\u00e7\u00e3o a uma forma\u00e7\u00e3o tecnoest\u00e9tica."
+    titulo: "'Faltam-nos poetas técnicos': em direção a uma formação tecnoestética."
   }
 ];
 
@@ -529,7 +529,7 @@ const CHARACTERS = {
     accent: "#9cc7ff"
   },
   juliana: {
-    name: "Prof. Juliana",
+    name: "Profa. Juliana",
     color: "#27ae60",
     accent: "#9be7b3"
   },
@@ -902,7 +902,7 @@ function drawCharacter(context, x, y, width, height, characterName) {
 function renderPreviews() {
   const previews = [
     { id: "preview-emerson", name: "Prof. Emerson" },
-    { id: "preview-juliana", name: "Prof. Juliana" }
+    { id: "preview-juliana", name: "Profa. Juliana" }
   ];
 
   previews.forEach(({ id, name }) => {
@@ -999,7 +999,7 @@ function renderGlossary() {
       author.textContent = entry.autor;
       article.append(title, author);
     } else {
-      title.textContent = `Refer\u00eancia Bloqueada - Explore a Fase ${entry.id}`;
+      title.textContent = `Referência Bloqueada - Explore a Fase ${entry.id}`;
       article.append(title);
     }
 
@@ -1049,7 +1049,7 @@ function showCapturedReference(itemId) {
   clearAllInput(true);
   setMobileControlsVisible(false);
   referenceCaptureOpen = true;
-  referenceCaptureTitle.textContent = `Refer\u00eancia ${reference.id} desbloqueada`;
+  referenceCaptureTitle.textContent = `Referência ${reference.id} desbloqueada`;
   referenceCaptureAuthor.textContent = reference.autor;
   referenceCaptureText.textContent = reference.titulo;
   referenceCaptureOverlay.style.display = "flex";
@@ -1244,10 +1244,10 @@ const FINAL_DEFENSE_CHAPTER_MOVE_INTERVAL = 7.8;
 const FINAL_DEFENSE_PROJECTILE_DAMAGE = 6;
 const FINAL_DEFENSE_DROPPED_CHAPTER_COOLDOWN = 0.85;
 const FINAL_DEFENSE_CHAPTERS = [
-  { id: 1, name: "Introducao", label: "Intro", professorName: "Prof. Celi" },
-  { id: 2, name: "Metodologia", label: "Metodo", professorName: "Prof. Giordano" },
-  { id: 3, name: "Desenvolvimento", label: "Desenv.", professorName: "Prof. Juliana" },
-  { id: 4, name: "Conclusao", label: "Conclusao", professorName: "Prof. Emerson" }
+  { id: 1, name: "Introdução", label: "Intro", professorName: "Profa. Celi" },
+  { id: 2, name: "Metodologia", label: "Método", professorName: "Prof. Giordano" },
+  { id: 3, name: "Desenvolvimento", label: "Desenv.", professorName: "Profa. Juliana" },
+  { id: 4, name: "Conclusão", label: "Conclusão", professorName: "Prof. Emerson" }
 ];
 const FINAL_DEFENSE_CHAPTER_SPAWNS = [
   { x: 126, y: 356 },
@@ -1879,7 +1879,7 @@ class ResearchDesk {
     context.fillStyle = "#f5f7fb";
     context.font = "700 10px Inter, Segoe UI, Arial";
     context.textAlign = "center";
-    context.fillText(`Capitulos: ${this.deliveredCount}/4`, this.x + this.width / 2, this.y + 24);
+    context.fillText(`Capítulos: ${this.deliveredCount}/4`, this.x + this.width / 2, this.y + 24);
     context.restore();
   }
 }
@@ -2471,7 +2471,7 @@ class AllyNPC {
     this.y = y;
     this.width = 32;
     this.height = 54;
-    this.name = options.name || "Prof. Celi";
+    this.name = options.name || "Profa. Celi";
     this.color = options.color || "#c23bff";
     this.quotes = options.quotes || bordoesCeli;
     this.variant = options.variant || "celi";
@@ -2692,7 +2692,7 @@ class BossCamera {
     if (rectsOverlap(player, this.getLaserBounds())) {
       audioManager.playCollision();
       applyPrivacyDamage(40);
-      statusMessage = privacy === 0 ? "Privacidade comprometida" : "Laser panoptico atingiu voce";
+      statusMessage = privacy === 0 ? "Privacidade comprometida" : "Laser panóptico atingiu você";
       statusTimer = 1.5;
       player.vx = player.x + player.width / 2 < this.eyeX ? -520 : 520;
       player.vy = -420;
@@ -2975,7 +2975,7 @@ class Player {
     this.vy += PHYSICS.gravity * deltaTime;
 
     // Jump buffer + coyote time deixam o pulo responsivo sem permitir
-    // pulo infinito: o salto so ocorre se o jogador ainda estiver no chao
+    // pulo infinito: o salto s? ocorre se o jogador ainda estiver no ch?o
     // ou dentro da pequena janela logo apos sair de uma plataforma.
     if (this.jumpBufferTimer > 0 && this.coyoteTimer > 0) {
       this.vy = PHYSICS.jumpVelocity;
@@ -3229,7 +3229,7 @@ termsAcceptButton.addEventListener("click", () => {
 
 termsRejectLink.addEventListener("click", (event) => {
   event.preventDefault();
-  alert("Erro: Recusa n\u00e3o lucrativa. Redirecionando para aceita\u00e7\u00e3o obrigat\u00f3ria...");
+  alert("Erro: Recusa não lucrativa. Redirecionando para aceitação obrigatória...");
   acceptTermsAndStart();
 });
 
@@ -3266,7 +3266,7 @@ journeyRestartButton.addEventListener("click", () => {
 });
 
 creditsButton.addEventListener("click", () => {
-  alert("Creditos: jogo-prototipo academico inspirado nas discussoes sobre trabalho, educacao, controle e tecnoestetica do Programa de Disciplina.");
+  alert("Créditos: jogo-protótipo acadêmico inspirado nas discussões sobre trabalho, educação, controle e tecnoestética do Programa de Disciplina.");
 });
 
 cutsceneNextButton.addEventListener("click", () => {
@@ -3452,7 +3452,7 @@ function loadSmartHomeLevel() {
     new Plataforma(0, 492, 960, 48, "ground"),
     // Plataforma padrao com um cookie.
     new Plataforma(120, 420, 160, 22, "furniture"),
-    // Mesa larga vazia: zona segura central para planejar o proximo salto.
+    // Mesa larga vazia: zona segura central para planejar o pr?ximo salto.
     new Plataforma(330, 360, 270, 22, "furniture"),
     // Plataforma curta com inimigo.
     new Plataforma(690, 402, 126, 22, "furniture"),
@@ -3495,9 +3495,9 @@ function loadBehavioralFuturesLevel() {
     new GlitchPlatform(108, 410, 150, 18, 2.4, 1, 0),
     // Zona segura larga: respiro apos o primeiro salto.
     new Plataforma(318, 350, 280, 18, "glitch-safe"),
-    // Glitch media com cookie proximo, mas nao obrigatorio.
+    // Glitch m?dia com cookie pr?ximo, mas n?o obrigat?rio.
     new GlitchPlatform(660, 308, 150, 18, 2, 1, 0.8),
-    // Zona segura superior: espaco para reposicionar antes da subida final.
+    // Zona segura superior: espa?o para reposicionar antes da subida final.
     new Plataforma(178, 252, 250, 18, "glitch-safe"),
     // Glitch final curta.
     new GlitchPlatform(514, 202, 142, 18, 2.2, 0.9, 1.5)
@@ -3523,7 +3523,7 @@ function loadBehavioralFuturesLevel() {
 
 function loadTechnicalCultureLevel() {
   currentLevel = 4;
-  levelTitle = "CULTURA TECNICA";
+  levelTitle = "CULTURA TÉCNICA";
   playerStart = { x: 34, y: 438 };
 
   platforms = [
@@ -3568,7 +3568,7 @@ function loadTechnicalCultureLevel() {
 
 function loadTechnoAestheticLevel() {
   currentLevel = 5;
-  levelTitle = "TECNO-ESTETICA";
+  levelTitle = "TECNO-ESTÉTICA";
   playerStart = { x: 34, y: 438 };
 
   platforms = [
@@ -3620,7 +3620,7 @@ function loadTechnoAestheticLevel() {
 
 function loadBossFightLevel() {
   currentLevel = 6;
-  levelTitle = "PANOPTICO MECANICO";
+  levelTitle = "PANÓPTICO MECÂNICO";
   playerStart = { x: 42, y: 438 };
   const helperKey = currentCharacterKey === "emerson" ? "juliana" : "emerson";
   const helperCharacter = CHARACTERS[helperKey];
@@ -3658,7 +3658,7 @@ function loadBossFightLevel() {
 
 function loadQualificationBoardLevel() {
   currentLevel = 7;
-  levelTitle = "BANCA DE QUALIFICACAO";
+  levelTitle = "BANCA DE QUALIFICAÇÃO";
   playerStart = { x: 44, y: 438 };
 
   platforms = [
@@ -3679,16 +3679,16 @@ function loadQualificationBoardLevel() {
   ];
 
   professorNPCs = [
-    new ProfessorNPC(128, 342, "Prof. Celi", 1),
+    new ProfessorNPC(128, 342, "Profa. Celi", 1),
     new ProfessorNPC(724, 342, "Prof. Giordano", 2),
-    new ProfessorNPC(194, 438, "Prof. Juliana", 3),
+    new ProfessorNPC(194, 438, "Profa. Juliana", 3),
     new ProfessorNPC(790, 438, "Prof. Emerson", 4)
   ];
 }
 
 function loadPraxisIceLevel() {
   currentLevel = 8;
-  levelTitle = "PARODIA DA PRAXIS";
+  levelTitle = "PARÓDIA DA PRÁXIS";
   playerStart = { x: 42, y: 438 };
   const iceStartPlatform = new Plataforma(48, 360, 190, 20, "techno-safe");
 
@@ -3738,13 +3738,13 @@ function loadFinalDefenseLevel() {
   chapterShuffleStep = 0;
 
   professorNPCs = [
-    new ProfessorNPC(96, 438, "Prof. Celi", 0, {
+    new ProfessorNPC(96, 438, "Profa. Celi", 0, {
       shootsCritiques: true,
       projectileDirection: 1,
       projectileCooldown: 3.1,
       initialDelay: 1.1,
       requiredChapterId: 1,
-      requestChapterName: "Introducao"
+      requestChapterName: "Introdução"
     }),
     new ProfessorNPC(268, 438, "Prof. Giordano", 0, {
       shootsCritiques: true,
@@ -3754,7 +3754,7 @@ function loadFinalDefenseLevel() {
       requiredChapterId: 2,
       requestChapterName: "Metodologia"
     }),
-    new ProfessorNPC(690, 438, "Prof. Juliana", 0, {
+    new ProfessorNPC(690, 438, "Profa. Juliana", 0, {
       shootsCritiques: true,
       projectileDirection: -1,
       projectileCooldown: 3,
@@ -3768,7 +3768,7 @@ function loadFinalDefenseLevel() {
       projectileCooldown: 3.35,
       initialDelay: 1.4,
       requiredChapterId: 4,
-      requestChapterName: "Conclusao"
+      requestChapterName: "Conclusão"
     })
   ];
 
@@ -3807,11 +3807,11 @@ function prepareBossCutscene(helperKey) {
     },
     {
       speaker: mainName,
-      text: "Aquele livro da Zuboff nos avisou que a extracao nao pararia no mundo virtual. O capitalismo de vigilancia agora quer nosso espaco fisico."
+      text: "Aquele livro da Zuboff nos avisou que a extração não pararia no mundo virtual. O capitalismo de vigilância agora quer nosso espaço físico."
     },
     {
       speaker: helperName,
-      text: "Exato! A maquina quer automatizar nosso comportamento. Fique atras do meu escudo teorico quando o laser disparar. E hora da nossa cultura tecnica quebrar esse molde!"
+      text: "Exato! A máquina quer automatizar nosso comportamento. Fique atrás do meu escudo teórico quando o laser disparar. É hora da nossa cultura técnica quebrar esse molde!"
     }
   ];
 
@@ -3909,7 +3909,7 @@ function acceptTermsAndStart() {
 }
 
 function getMentorCharacterName() {
-  return CHARACTERS[mentorCharacterKey]?.name || "o personagem escolhido no inicio";
+  return CHARACTERS[mentorCharacterKey]?.name || "o personagem escolhido no início";
 }
 
 function getCurrentStudentName() {
@@ -3919,24 +3919,24 @@ function getCurrentStudentName() {
 function getQualificationStudentText() {
   const mentorName = getMentorCharacterName();
 
-  return `${mentorName}, o personagem escolhido por voce no inicio, agora precisa escolher um orientando para a Banca de Qualificacao. Selecione o estudante que entrara em cena: ele sera o personagem jogavel nesta etapa. Cada professor exige um conceito especifico; encontre as teorias corretas e entregue-as aos avaliadores correspondentes.`;
+  return `${mentorName}, o personagem escolhido por você no início, agora precisa escolher um orientando para a Banca de Qualificação. Selecione o estudante que entrará em cena: ele será o personagem jogável nesta etapa. Cada professor exige um conceito específico; encontre as teorias corretas e entregue-as aos avaliadores correspondentes.`;
 }
 
 function getFinalDefenseStudentText() {
   const mentorName = getMentorCharacterName();
   const currentStudentName = getCurrentStudentName();
   const continuityText = currentStudentName
-    ? `Voce pode manter ${currentStudentName} como orientando ou escolher outro estudante.`
-    : "Voce pode manter o orientando atual ou escolher outro estudante.";
+    ? `Você pode manter ${currentStudentName} como orientando ou escolher outro estudante.`
+    : "Você pode manter o orientando atual ou escolher outro estudante.";
 
-  return `${mentorName} volta a orientar a escolha antes da Defesa Final. ${continuityText} O orientando selecionado sera o personagem jogavel da fase 9: sobreviva a banca, encontre os capitulos finais e entregue cada parte ao professor que solicitou.`;
+  return `${mentorName} volta a orientar a escolha antes da Defesa Final. ${continuityText} O orientando selecionado será o personagem jogável da fase 9: sobreviva a banca, encontre os capítulos finais e entregue cada parte ao professor que solicitou.`;
 }
 
 function getStudentSelectionInstructionText(targetLevel) {
   return targetLevel === 9 ? getFinalDefenseStudentText() : getQualificationStudentText();
 }
 
-function showStudentSelectionScreen(targetLevel = 7, instructionText = "", title = "Banca de Qualifica\u00e7\u00e3o") {
+function showStudentSelectionScreen(targetLevel = 7, instructionText = "", title = "Banca de Qualificação") {
   hideEndOverlays();
   clearAllInput(true);
   setMobileControlsVisible(false);
@@ -4165,7 +4165,7 @@ function update(deltaTime) {
     handleIceBlockPush(deltaTime);
 
     if (iceBlock.isLost()) {
-      finishGame("defeat", "O gelo caiu no precipicio. A praxis se perdeu no caminho.");
+      finishGame("defeat", "O gelo caiu no precipício. A práxis se perdeu no caminho.");
       return;
     }
 
@@ -4222,7 +4222,7 @@ function update(deltaTime) {
       scroll.collected = true;
       unlockScroll(scroll.itemId);
       audioManager.playWin();
-      statusMessage = "Referencia bibliografica desbloqueada";
+      statusMessage = "Referência bibliográfica desbloqueada";
       statusTimer = 1.8;
       showCapturedReference(scroll.itemId);
       return;
@@ -4253,7 +4253,7 @@ function update(deltaTime) {
       audioManager.playWin();
       const activeRequest = getActiveFinalDefenseRequest();
       const targetProfessor = activeRequest?.id === chapter.id ? activeRequest.professorName : "o professor solicitante";
-      statusMessage = `Capitulo coletado: ${chapter.name}. Entregue a ${targetProfessor}`;
+      statusMessage = `Capítulo coletado: ${chapter.name}. Entregue a ${targetProfessor}`;
       statusTimer = 1.8;
     }
   }
@@ -4427,7 +4427,7 @@ function draw() {
   drawHud();
 }
 
-function applyDronePenalty(enemy, message = "Drone de vigilancia detectou voce") {
+function applyDronePenalty(enemy, message = "Drone de vigilância detectou você") {
   audioManager.playCollision();
   applyPrivacyDamage(DRONE_TRACKING_VALUE);
   statusMessage = privacy === 0 ? "Privacidade comprometida" : message;
@@ -4546,7 +4546,7 @@ function dropCarriedChapter() {
   chapter.pickupDelay = FINAL_DEFENSE_DROPPED_CHAPTER_COOLDOWN;
   player.carriedChapter = null;
   audioManager.playSonar();
-  statusMessage = `Capitulo solto: ${chapter.name}`;
+  statusMessage = `Capítulo solto: ${chapter.name}`;
   statusTimer = 1.2;
   updateDropControlVisibility();
   return true;
@@ -4588,7 +4588,7 @@ function updateFinalDefenseChapterShuffling(deltaTime) {
     chapter.moveTo(spawn.x, spawn.y);
   });
 
-  statusMessage = "Os capitulos mudaram de plataforma";
+  statusMessage = "Os capítulos mudaram de plataforma";
   statusTimer = 1.4;
 }
 
@@ -4625,7 +4625,7 @@ function updateFinalDefensePuzzle() {
   audioManager.playWin();
 
   const deliveredCount = finalDefenseRequestIndex;
-  statusMessage = `Capitulo entregue: ${deliveredCount}/4`;
+  statusMessage = `Capítulo entregue: ${deliveredCount}/4`;
   statusTimer = 1.8;
 
   if (deliveredCount >= FINAL_DEFENSE_CHAPTERS.length && !masterDiploma) {
@@ -4670,7 +4670,7 @@ function updateQualificationExit() {
 
   exitDoor = new ExitDoor(WIDTH / 2 - 22, 282, 44, 74);
   audioManager.playWin();
-  statusMessage = "Banca satisfeita: portal de aprovacao aberto";
+  statusMessage = "Banca satisfeita: portal de aprovação aberto";
   statusTimer = 2.2;
 }
 
@@ -4707,7 +4707,7 @@ function finishGame(result, customDefeatMessage = "") {
     audioManager.playWin();
 
     if (currentLevel === 6) {
-      showStudentSelectionScreen(7, getQualificationStudentText(), "Banca de Qualifica\u00e7\u00e3o");
+      showStudentSelectionScreen(7, getQualificationStudentText(), "Banca de Qualificação");
       return;
     }
 
@@ -4723,7 +4723,7 @@ function finishGame(result, customDefeatMessage = "") {
   }
 
   updateEndQuote("defeat");
-  defeatTitle.innerText = customDefeatMessage || "Game Over: Dados Completamente Extraidos";
+  defeatTitle.innerText = customDefeatMessage || "Game Over: Dados Completamente Extraídos";
   defeatOverlay.style.display = "flex";
   retryButton.focus();
 }
@@ -4742,7 +4742,7 @@ function finishGraduation() {
   pauseGameLoop();
 
   const studentName = currentCharacter?.name || "ORIENTANDO";
-  graduationText.innerText = `O Programa de P\u00f3s-gradua\u00e7\u00e3o concede a ${studentName} o t\u00edtulo de Mestre! A fuga do algoritmo foi um sucesso.`;
+  graduationText.innerText = `O Programa de Pós-graduação concede a ${studentName} o título de Mestre! A fuga do algoritmo foi um sucesso.`;
   graduationScreen.style.display = "flex";
   journeyRestartButton.focus();
 }
@@ -4751,7 +4751,7 @@ function hideEndOverlays() {
   victoryOverlay.style.display = "none";
   defeatOverlay.style.display = "none";
   graduationScreen.style.display = "none";
-  defeatTitle.innerText = "Game Over: Dados Completamente Extraidos";
+  defeatTitle.innerText = "Game Over: Dados Completamente Extraídos";
 }
 
 function findNearestThreat(x, y, maxDistance) {
@@ -4850,7 +4850,7 @@ function drawBackground() {
     4: ["#e0c3fc", "#8ec5fc"], // Cultura Tecnica - Ceu magico
     5: ["#ff9a9e", "#fecfef"], // Tecno-estetica - Rosa sunset
     6: ["#0f2027", "#203a43"], // Panoptico - Noite tensa
-    7: ["#d4fc79", "#96e6a1"], // Qualificacao - Verde sucesso
+    7: ["#d4fc79", "#96e6a1"], // Qualifica??o - Verde sucesso
     8: ["#89f7fe", "#66a6ff"], // Parodia Praxis - Gelo
     9: ["#ffb199", "#ff0844"]  // Defesa final - Fogo sunset
   };
@@ -5003,7 +5003,7 @@ function drawCarriedChapterHint(context) {
     return;
   }
 
-  const label = areMobileControlsVisible() ? "Toque em Soltar capitulo" : "S / Baixo: soltar capitulo";
+  const label = areMobileControlsVisible() ? "Toque em Soltar capítulo" : "S / Baixo: soltar capítulo";
   const x = player.x + player.width / 2;
   const y = Math.max(76, player.y - 42);
 
