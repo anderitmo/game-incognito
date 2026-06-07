@@ -44,6 +44,7 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,6 +56,7 @@ body {
   max-height: 100%;
   aspect-ratio: 16 / 9;
   object-fit: contain;
+  touch-action: none;
   border-radius: 12px;
   background: #090b0f;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
@@ -931,9 +933,9 @@ h1 {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     padding:
       0
-      calc(env(safe-area-inset-right, 0px) + 18px)
+      calc(env(safe-area-inset-right, 0px) + 24px)
       0
-      calc(env(safe-area-inset-left, 0px) + 18px);
+      calc(env(safe-area-inset-left, 0px) + 24px);
   }
 
   .d-pad,
@@ -958,6 +960,7 @@ h1 {
     calc(env(safe-area-inset-left, 0px) + 28px);
   z-index: 4;
   pointer-events: none;
+  touch-action: none;
 }
 
 @media (pointer: coarse) and (orientation: landscape),
@@ -971,6 +974,7 @@ h1 {
   display: flex;
   gap: 16px;
   pointer-events: auto;
+  touch-action: none;
 }
 
 .touch-btn {
@@ -1011,9 +1015,9 @@ h1 {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     padding:
       0
-      calc(env(safe-area-inset-right, 0px) + 18px)
+      calc(env(safe-area-inset-right, 0px) + 24px)
       0
-      calc(env(safe-area-inset-left, 0px) + 18px);
+      calc(env(safe-area-inset-left, 0px) + 24px);
   }
 
   .d-pad,

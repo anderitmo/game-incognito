@@ -942,24 +942,25 @@ function cutPlayerJump() {
   }
 }
 
-function clearTouchInput(cutJump = false) {
-  const hadJump = touchInput.jump.size > 0;
-
+function clearTouchInput() {
   touchInput.left.clear();
   touchInput.right.clear();
   touchInput.jump.clear();
+  touchJumpRequestUntil = 0;
   updateTouchButtonState("left");
   updateTouchButtonState("right");
   updateTouchButtonState("jump");
-
-  if (cutJump && hadJump) {
-    cutPlayerJump();
-  }
 }
 
 function clearAllInput(cutJump = false) {
+  const hadKeyboardJump = keys.has("arrowup") || keys.has("w") || keys.has(" ");
+
   keys.clear();
-  clearTouchInput(cutJump);
+  clearTouchInput();
+
+  if (cutJump && hadKeyboardJump) {
+    cutPlayerJump();
+  }
 }
 
 function canShowMobileControlsInViewport() {
@@ -980,7 +981,7 @@ function setMobileControlsVisible(visible) {
   mobileControls.setAttribute("aria-hidden", String(!shouldShow));
 
   if (!shouldShow) {
-    clearTouchInput(true);
+    clearTouchInput();
   }
 }
 
@@ -1019,6 +1020,7 @@ const DRONE_KNOCKBACK_X = 440;
 const DRONE_KNOCKBACK_Y = -360;
 const IDLE_QUOTE_DELAY = 4;
 const IDLE_QUOTE_DURATION = 3.5;
+const TOUCH_JUMP_REQUEST_MS = 180;
 const QUALIFICATION_STUDENT_TEXT = "O momento mais temido chegou: A Banca de Qualifica\u00e7\u00e3o! Cada professor exige um conceito espec\u00edfico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para n\u00e3o errar o autor na frente da banca!";
 const FINAL_DEFENSE_STUDENT_TEXT = "A Defesa Final! A banca est\u00e1 implac\u00e1vel. Sobreviva \u00e0s cr\u00edticas, navegue pelo racioc\u00ednio inst\u00e1vel e entregue os 4 cap\u00edtulos finais da sua pesquisa!";
 
@@ -1028,6 +1030,7 @@ const touchInput = {
   right: new Set(),
   jump: new Set()
 };
+let touchJumpRequestUntil = 0;
 const touchButtons = {
   left: btnLeft,
   right: btnRight,
@@ -2675,16 +2678,20 @@ renderStudentPreviews();
 
 function pressTouchControl(control, pointerId) {
   touchInput[control].add(pointerId);
+
+  if (control === "jump") {
+    touchJumpRequestUntil = Math.max(
+      touchJumpRequestUntil,
+      performance.now() + TOUCH_JUMP_REQUEST_MS
+    );
+  }
+
   updateTouchButtonState(control);
 }
 
 function releaseTouchControl(control, pointerId) {
-  const wasPressed = touchInput[control].delete(pointerId);
+  touchInput[control].delete(pointerId);
   updateTouchButtonState(control);
-
-  if (control === "jump" && wasPressed && touchInput.jump.size === 0) {
-    cutPlayerJump();
-  }
 }
 
 function bindTouchControl(button, control) {
@@ -2693,7 +2700,7 @@ function bindTouchControl(button, control) {
   }
 
   button.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
       return;
     }
 
@@ -4467,7 +4474,7 @@ function wrapCanvasText(context, text, maxWidth) {
 }
 
 function wasJumpRequested() {
-  return keys.has("arrowup") || keys.has("w") || keys.has(" ") || touchInput.jump.size > 0;
+  return keys.has("arrowup") || keys.has("w") || keys.has(" ") || performance.now() <= touchJumpRequestUntil;
 }
 
 function isLeftPressed() {
