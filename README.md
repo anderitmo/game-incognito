@@ -73,7 +73,7 @@ Este projeto foi construído do zero, sem o uso de engines externas (como Unity 
 
 2. Pode baixar os arquivos, descompactar e abrir o arquivo index.html
 
-3. Pode clonar o repositório:
+3. Pode clonar o repositório: 
 O jogo roda inteiramente no lado do cliente (Client-side). Não é necessário instalar Node.js, bancos de dados ou servidores complexos.
 
    ```bash
