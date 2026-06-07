@@ -15,7 +15,10 @@
       tabindex="0"
       aria-label="Área jogável de Incógnito: A Fuga do Algoritmo"
     ></canvas>
-    <button id="inGameGlossaryButton" class="in-game-glossary" type="button">Refer&ecirc;ncias (G)</button>
+    <button id="inGameGlossaryButton" class="in-game-glossary" type="button" aria-label="Abrir referenciais (tecla G)">
+      <span class="glossary-label">Referenciais</span>
+      <span class="shortcut-key" aria-hidden="true">G</span>
+    </button>
     <button id="fullscreenButton" class="fullscreen-btn" type="button">⛶ Tela Cheia</button>
 
     <div id="mobileControls" class="mobile-controls" aria-hidden="true">
@@ -25,6 +28,7 @@
       </div>
       <div class="action-pad">
         <button id="btnJump" class="touch-btn" type="button" aria-label="Pular" aria-pressed="false">&uarr; Pular</button>
+        <button id="btnDrop" class="touch-btn" type="button" aria-label="Soltar cap&iacute;tulo" aria-hidden="true">Soltar cap&iacute;tulo</button>
       </div>
     </div>
 
@@ -56,6 +60,18 @@
         <h2 id="glossaryTitle">Refer&ecirc;ncias da Disciplina</h2>
         <div id="glossaryContent" class="glossary-content"></div>
         <button id="glossaryCloseButton" class="end-button" type="button">Fechar / Voltar ao jogo</button>
+      </div>
+    </div>
+
+    <div id="referenceCaptureOverlay" class="reference-capture-overlay" role="dialog" aria-modal="true" aria-labelledby="referenceCaptureTitle">
+      <div class="reference-capture-panel">
+        <p class="kicker">Pergaminho capturado</p>
+        <h2 id="referenceCaptureTitle">Refer&ecirc;ncia desbloqueada</h2>
+        <article class="captured-reference-card">
+          <p id="referenceCaptureAuthor" class="captured-reference-author"></p>
+          <p id="referenceCaptureText" class="captured-reference-title"></p>
+        </article>
+        <button id="referenceCaptureCloseButton" class="end-button" type="button">Continuar</button>
       </div>
     </div>
 

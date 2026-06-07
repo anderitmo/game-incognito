@@ -11,9 +11,15 @@ const mobileControls = document.getElementById("mobileControls");
 const btnLeft = document.getElementById("btnLeft");
 const btnRight = document.getElementById("btnRight");
 const btnJump = document.getElementById("btnJump");
+const btnDrop = document.getElementById("btnDrop");
 const glossaryModal = document.getElementById("glossary-modal");
 const glossaryContent = document.getElementById("glossaryContent");
 const glossaryCloseButton = document.getElementById("glossaryCloseButton");
+const referenceCaptureOverlay = document.getElementById("referenceCaptureOverlay");
+const referenceCaptureTitle = document.getElementById("referenceCaptureTitle");
+const referenceCaptureAuthor = document.getElementById("referenceCaptureAuthor");
+const referenceCaptureText = document.getElementById("referenceCaptureText");
+const referenceCaptureCloseButton = document.getElementById("referenceCaptureCloseButton");
 const victoryOverlay = document.getElementById("victoryOverlay");
 const defeatOverlay = document.getElementById("defeatOverlay");
 const defeatTitle = document.getElementById("defeatTitle");
@@ -186,6 +192,8 @@ class AudioManager {
     this.bossGain = null;
     this.bossIntervalId = null;
     this.bossStep = 0;
+    this.finalDefenseIntervalId = null;
+    this.finalDefenseStep = 0;
   }
 
   init() {
@@ -209,11 +217,19 @@ class AudioManager {
 
   ensureReady() {
     if (!this.context) {
+      this.init();
+    }
+
+    if (!this.context) {
       return false;
     }
 
     if (this.context.state === "suspended") {
-      this.context.resume();
+      const resumePromise = this.context.resume();
+
+      if (resumePromise && typeof resumePromise.catch === "function") {
+        resumePromise.catch(() => {});
+      }
     }
 
     return true;
@@ -282,6 +298,7 @@ class AudioManager {
     }
 
     this.stopBossBGM();
+    this.stopFinalDefenseBGM();
 
     if (this.bgmIntervalId) {
       return;
@@ -330,6 +347,7 @@ class AudioManager {
 
   stopBGM() {
     this.stopBossBGM();
+    this.stopFinalDefenseBGM();
 
     if (this.bgmIntervalId) {
       clearInterval(this.bgmIntervalId);
@@ -341,6 +359,8 @@ class AudioManager {
     if (!this.ensureReady()) {
       return;
     }
+
+    this.stopFinalDefenseBGM();
 
     if (this.bossGain) {
       return;
@@ -416,6 +436,70 @@ class AudioManager {
     this.bossOscillators = [];
     this.bossGain = null;
     this.bossStep = 0;
+  }
+
+  playFinalDefenseBGM() {
+    if (!this.ensureReady()) {
+      return;
+    }
+
+    this.stopBossBGM();
+
+    if (this.bgmIntervalId) {
+      clearInterval(this.bgmIntervalId);
+      this.bgmIntervalId = null;
+    }
+
+    if (this.finalDefenseIntervalId) {
+      return;
+    }
+
+    const bassPattern = [73.42, 82.41, 73.42, 92.5];
+    const alarmPattern = [392, 415.3, 466.16, 523.25];
+
+    this.finalDefenseIntervalId = setInterval(() => {
+      if (!this.context) {
+        return;
+      }
+
+      const tickTime = this.context.currentTime;
+      const bass = this.context.createOscillator();
+      const bassGain = this.context.createGain();
+      bass.type = "sawtooth";
+      bass.frequency.setValueAtTime(bassPattern[this.finalDefenseStep % bassPattern.length], tickTime);
+      bassGain.gain.setValueAtTime(0.001, tickTime);
+      bassGain.gain.exponentialRampToValueAtTime(0.034, tickTime + 0.018);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.2);
+      bass.connect(bassGain);
+      bassGain.connect(this.masterGain);
+      bass.start(tickTime);
+      bass.stop(tickTime + 0.24);
+
+      if (this.finalDefenseStep % 3 === 0) {
+        const alarm = this.context.createOscillator();
+        const alarmGain = this.context.createGain();
+        alarm.type = "square";
+        alarm.frequency.setValueAtTime(alarmPattern[this.finalDefenseStep % alarmPattern.length], tickTime);
+        alarmGain.gain.setValueAtTime(0.001, tickTime);
+        alarmGain.gain.exponentialRampToValueAtTime(0.026, tickTime + 0.01);
+        alarmGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.12);
+        alarm.connect(alarmGain);
+        alarmGain.connect(this.masterGain);
+        alarm.start(tickTime);
+        alarm.stop(tickTime + 0.14);
+      }
+
+      this.finalDefenseStep += 1;
+    }, 145);
+  }
+
+  stopFinalDefenseBGM() {
+    if (this.finalDefenseIntervalId) {
+      clearInterval(this.finalDefenseIntervalId);
+      this.finalDefenseIntervalId = null;
+    }
+
+    this.finalDefenseStep = 0;
   }
 
   playTone(frequency, start, duration, type, volume) {
@@ -675,14 +759,57 @@ function drawCharacter(context, x, y, width, height, characterName) {
 
     if (isAnderson) {
       context.save();
-      context.translate(centerX, bodyTop + height * 0.2);
-      context.rotate(-Math.PI / 4);
-      context.fillStyle = "#5c3a21";
-      drawRoundedRect(-width * 0.4, -height * 0.05, width * 0.9, height * 0.1, width * 0.02);
+      context.translate(centerX + width * 0.02, bodyTop + height * 0.25);
+      context.rotate(-Math.PI / 4.7);
+
+      context.fillStyle = "#6b3f1f";
+      drawRoundedRect(-width * 0.02, -height * 0.035, width * 0.62, height * 0.07, width * 0.02);
       context.fill();
-      context.fillStyle = "#cccccc";
-      for(let i=0; i<4; i++) {
-         context.fillRect(-width * 0.3 + i * width * 0.15, -height * 0.05, width * 0.02, height * 0.1);
+
+      context.fillStyle = "#4a2b17";
+      drawRoundedRect(width * 0.52, -height * 0.055, width * 0.16, height * 0.11, width * 0.025);
+      context.fill();
+
+      context.fillStyle = "#b96f2d";
+      context.strokeStyle = "#f0c36b";
+      context.lineWidth = Math.max(1, width * 0.035);
+      context.beginPath();
+      context.ellipse(-width * 0.25, -height * 0.06, width * 0.2, height * 0.14, 0, 0, Math.PI * 2);
+      context.ellipse(-width * 0.28, height * 0.08, width * 0.27, height * 0.18, 0, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      context.fillStyle = "#2b1a12";
+      context.beginPath();
+      context.ellipse(-width * 0.24, height * 0.02, width * 0.08, height * 0.055, 0, 0, Math.PI * 2);
+      context.fill();
+
+      context.strokeStyle = "rgba(255, 244, 214, 0.92)";
+      context.lineWidth = Math.max(0.7, width * 0.018);
+      for (let i = -1; i <= 1; i++) {
+        const stringY = i * height * 0.025;
+        context.beginPath();
+        context.moveTo(-width * 0.43, stringY);
+        context.lineTo(width * 0.64, stringY);
+        context.stroke();
+      }
+
+      context.strokeStyle = "#d9b06b";
+      context.lineWidth = Math.max(0.7, width * 0.015);
+      for (let i = 0; i < 3; i++) {
+        const fretX = width * (0.12 + i * 0.12);
+        context.beginPath();
+        context.moveTo(fretX, -height * 0.04);
+        context.lineTo(fretX, height * 0.04);
+        context.stroke();
+      }
+
+      context.fillStyle = "#f0c36b";
+      for (let i = 0; i < 3; i++) {
+        context.beginPath();
+        context.arc(width * 0.57 + i * width * 0.035, -height * 0.07, width * 0.018, 0, Math.PI * 2);
+        context.arc(width * 0.57 + i * width * 0.035, height * 0.07, width * 0.018, 0, Math.PI * 2);
+        context.fill();
       }
       context.restore();
     }
@@ -851,6 +978,10 @@ function unlockScroll(itemId) {
   }
 }
 
+function getReferenceById(itemId) {
+  return referenciasData.find((entry) => entry.id === itemId) || null;
+}
+
 function renderGlossary() {
   glossaryContent.innerHTML = "";
 
@@ -908,6 +1039,39 @@ function closeGlossary() {
   glossaryButton.focus();
 }
 
+function showCapturedReference(itemId) {
+  const reference = getReferenceById(itemId);
+
+  if (!reference || !referenceCaptureOverlay) {
+    return;
+  }
+
+  clearAllInput(true);
+  setMobileControlsVisible(false);
+  referenceCaptureOpen = true;
+  referenceCaptureTitle.textContent = `Refer\u00eancia ${reference.id} desbloqueada`;
+  referenceCaptureAuthor.textContent = reference.autor;
+  referenceCaptureText.textContent = reference.titulo;
+  referenceCaptureOverlay.style.display = "flex";
+  referenceCaptureCloseButton.focus();
+  pauseGameLoop();
+}
+
+function closeCapturedReference() {
+  if (!referenceCaptureOpen) {
+    return;
+  }
+
+  referenceCaptureOpen = false;
+  referenceCaptureOverlay.style.display = "none";
+
+  if (gameStarted && !gameEnded && !cutsceneActive) {
+    canvas.focus();
+    lastTime = performance.now();
+    startGameLoop();
+  }
+}
+
 function pauseGameLoop() {
   setMobileControlsVisible(false);
 
@@ -963,6 +1127,21 @@ function clearAllInput(cutJump = false) {
   }
 }
 
+function updateDropControlVisibility() {
+  if (!mobileControls || !btnDrop) {
+    return;
+  }
+
+  const canDrop = currentLevel === 9 && Boolean(player && player.carriedChapter);
+  mobileControls.classList.toggle("can-drop", canDrop);
+  btnDrop.disabled = !canDrop;
+  btnDrop.setAttribute("aria-hidden", String(!canDrop));
+}
+
+function areMobileControlsVisible() {
+  return Boolean(mobileControls && mobileControls.classList.contains("is-visible"));
+}
+
 function canShowMobileControlsInViewport() {
   return (
     window.matchMedia("(pointer: coarse) and (orientation: landscape)").matches ||
@@ -982,7 +1161,17 @@ function setMobileControlsVisible(visible) {
 
   if (!shouldShow) {
     clearTouchInput();
+    mobileControls.classList.remove("can-drop");
+
+    if (btnDrop) {
+      btnDrop.disabled = true;
+      btnDrop.setAttribute("aria-hidden", "true");
+    }
+
+    return;
   }
+
+  updateDropControlVisibility();
 }
 
 function refreshMobileControlsVisibility() {
@@ -991,6 +1180,7 @@ function refreshMobileControlsVisibility() {
     !gameEnded &&
     !cutsceneActive &&
     glossaryModal.style.display !== "flex" &&
+    referenceCaptureOverlay.style.display !== "flex" &&
     termsModal.style.display !== "flex" &&
     studentSelectionScreen.style.display !== "flex" &&
     victoryOverlay.style.display !== "flex" &&
@@ -999,6 +1189,35 @@ function refreshMobileControlsVisibility() {
   );
 
   setMobileControlsVisible(gameplaySurfaceActive);
+}
+
+function resumeGameplayAudio() {
+  audioManager.init();
+
+  if (!gameStarted || gameEnded || cutsceneActive) {
+    return;
+  }
+
+  if (currentLevel === 9) {
+    audioManager.playFinalDefenseBGM();
+  } else if (currentLevel === 6) {
+    audioManager.playBossBGM();
+  } else {
+    audioManager.playBGM();
+  }
+}
+
+function scheduleMobileControlsRefresh() {
+  refreshMobileControlsVisibility();
+
+  if (mobileControlsRefreshTimeoutId !== null) {
+    clearTimeout(mobileControlsRefreshTimeoutId);
+  }
+
+  mobileControlsRefreshTimeoutId = setTimeout(() => {
+    mobileControlsRefreshTimeoutId = null;
+    refreshMobileControlsVisibility();
+  }, 160);
 }
 
 const PHYSICS = {
@@ -1021,8 +1240,27 @@ const DRONE_KNOCKBACK_Y = -360;
 const IDLE_QUOTE_DELAY = 4;
 const IDLE_QUOTE_DURATION = 3.5;
 const TOUCH_JUMP_REQUEST_MS = 180;
-const QUALIFICATION_STUDENT_TEXT = "O momento mais temido chegou: A Banca de Qualifica\u00e7\u00e3o! Cada professor exige um conceito espec\u00edfico. Navegue pela sala, encontre as teorias corretas e entregue-as aos avaliadores correspondentes. Cuidado para n\u00e3o errar o autor na frente da banca!";
-const FINAL_DEFENSE_STUDENT_TEXT = "A Defesa Final! A banca est\u00e1 implac\u00e1vel. Sobreviva \u00e0s cr\u00edticas, navegue pelo racioc\u00ednio inst\u00e1vel e entregue os 4 cap\u00edtulos finais da sua pesquisa!";
+const FINAL_DEFENSE_CHAPTER_MOVE_INTERVAL = 7.8;
+const FINAL_DEFENSE_PROJECTILE_DAMAGE = 6;
+const FINAL_DEFENSE_DROPPED_CHAPTER_COOLDOWN = 0.85;
+const FINAL_DEFENSE_CHAPTERS = [
+  { id: 1, name: "Introducao", label: "Intro", professorName: "Prof. Celi" },
+  { id: 2, name: "Metodologia", label: "Metodo", professorName: "Prof. Giordano" },
+  { id: 3, name: "Desenvolvimento", label: "Desenv.", professorName: "Prof. Juliana" },
+  { id: 4, name: "Conclusao", label: "Conclusao", professorName: "Prof. Emerson" }
+];
+const FINAL_DEFENSE_CHAPTER_SPAWNS = [
+  { x: 126, y: 356 },
+  { x: 430, y: 252 },
+  { x: 688, y: 260 },
+  { x: 808, y: 172 },
+  { x: 322, y: 350 },
+  { x: 548, y: 356 },
+  { x: 158, y: 264 },
+  { x: 266, y: 172 },
+  { x: 544, y: 170 },
+  { x: 786, y: 350 }
+];
 
 const keys = new Set();
 const touchInput = {
@@ -1043,10 +1281,13 @@ let gameEnded = false;
 let animationFrameId = null;
 let currentCharacter = null;
 let currentCharacterKey = "emerson";
+let mentorCharacterKey = "emerson";
+let currentStudentKey = "";
 let pendingCharacter = null;
 let pendingCharacterKey = "emerson";
 let pendingStudentLevel = 7;
 let glossaryOpenedInGame = false;
+let referenceCaptureOpen = false;
 let skipBossCutsceneForTest = false;
 let lastGameResult = null;
 let lastTime = 0;
@@ -1071,6 +1312,11 @@ let critiqueProjectiles = [];
 let thesisChapters = [];
 let researchDesk = null;
 let masterDiploma = null;
+let deadlineClock = null;
+let finalDefenseRequestIndex = 0;
+let chapterShuffleTimer = 0;
+let chapterShuffleStep = 0;
+let mobileControlsRefreshTimeoutId = null;
 let drones = [];
 let vacuums = [];
 let smartSpeakers = [];
@@ -1497,11 +1743,61 @@ class ConceptItem {
 }
 
 class ThesisChapter extends ConceptItem {
-  constructor(x, y, id, name) {
+  constructor(x, y, id, name, label = name) {
     const colors = ["#ffcf4a", "#7cc7ff", "#ff7a7a", "#c23bff"];
     super(x, y, id, colors[(id - 1) % colors.length], name);
     this.width = 32;
     this.height = 24;
+    this.label = label;
+    this.delivered = false;
+    this.pickupDelay = 0;
+  }
+
+  moveTo(x, y) {
+    this.x = x;
+    this.y = y;
+    this.startX = x;
+    this.startY = y;
+  }
+
+  update(deltaTime) {
+    super.update(deltaTime);
+    this.pickupDelay = Math.max(0, this.pickupDelay - deltaTime);
+  }
+
+  canBeCollected() {
+    return !this.delivered && !this.collected && this.pickupDelay <= 0;
+  }
+
+  draw(context, x = this.x, y = this.y, scale = 1, forceVisible = false) {
+    if (this.collected && !forceVisible) {
+      return;
+    }
+
+    super.draw(context, x, y, scale, forceVisible);
+
+    if (forceVisible) {
+      return;
+    }
+
+    const bob = Math.sin(this.floatTimer) * 2 * scale;
+    const label = this.label;
+
+    context.save();
+    context.font = "700 9px Inter, Segoe UI, Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+
+    const labelWidth = Math.min(72, context.measureText(label).width + 10);
+    const labelX = clamp(x + (this.width * scale) / 2 - labelWidth / 2, 6, WIDTH - labelWidth - 6);
+    const labelY = y + bob + this.height * scale + 10;
+
+    context.fillStyle = "rgba(8, 10, 14, 0.74)";
+    roundRect(context, labelX, labelY - 7, labelWidth, 14, 5);
+    context.fill();
+    context.fillStyle = "#f5f7fb";
+    context.fillText(label, labelX + labelWidth / 2, labelY);
+    context.restore();
   }
 }
 
@@ -1632,6 +1928,83 @@ class MasterDiploma {
   }
 }
 
+class DeadlineClock {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 36;
+    this.height = 36;
+    this.collected = false;
+    this.pulse = 0;
+  }
+
+  get bounds() {
+    return {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  update(deltaTime) {
+    this.pulse += deltaTime * 4;
+  }
+
+  draw(context) {
+    if (this.collected) {
+      return;
+    }
+
+    const bob = Math.sin(this.pulse) * 3;
+    const cx = this.x + this.width / 2;
+    const cy = this.y + bob + this.height / 2;
+
+    context.save();
+    context.shadowColor = "rgba(72, 209, 124, 0.9)";
+    context.shadowBlur = 20;
+    context.fillStyle = "#f5fff7";
+    context.beginPath();
+    context.arc(cx, cy, this.width / 2, 0, Math.PI * 2);
+    context.fill();
+
+    context.shadowBlur = 0;
+    context.strokeStyle = "#2d9c55";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(cx, cy, this.width / 2 - 2, 0, Math.PI * 2);
+    context.stroke();
+
+    context.strokeStyle = "#111827";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(cx, cy);
+    context.lineTo(cx, cy - 10);
+    context.moveTo(cx, cy);
+    context.lineTo(cx + 9, cy + 4);
+    context.stroke();
+
+    context.fillStyle = "#48d17c";
+    context.beginPath();
+    context.arc(cx, cy, 3, 0, Math.PI * 2);
+    context.fill();
+
+    context.font = "700 9px Inter, Segoe UI, Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    const label = "Prazo 100%";
+    const labelWidth = context.measureText(label).width + 10;
+    const labelX = clamp(cx - labelWidth / 2, 6, WIDTH - labelWidth - 6);
+    const labelY = this.y + bob - 10;
+    context.fillStyle = "rgba(8, 10, 14, 0.74)";
+    roundRect(context, labelX, labelY - 7, labelWidth, 14, 5);
+    context.fill();
+    context.fillStyle = "#f5f7fb";
+    context.fillText(label, labelX + labelWidth / 2, labelY);
+    context.restore();
+  }
+}
+
 class ProfessorNPC {
   constructor(x, y, characterName, requiredConceptId, options = {}) {
     this.x = x;
@@ -1645,6 +2018,8 @@ class ProfessorNPC {
     this.projectileDirection = options.projectileDirection || 1;
     this.projectileCooldown = options.projectileCooldown || 2.4;
     this.projectileTimer = options.initialDelay || Math.random() * this.projectileCooldown;
+    this.requiredChapterId = options.requiredChapterId || 0;
+    this.requestChapterName = options.requestChapterName || "";
   }
 
   get bounds() {
@@ -1661,6 +2036,15 @@ class ProfessorNPC {
       return;
     }
 
+    if (currentLevel === 9) {
+      const activeRequest = getActiveFinalDefenseRequest();
+
+      if (!activeRequest || this.requiredChapterId !== activeRequest.id || this.isSatisfied) {
+        this.projectileTimer = Math.min(this.projectileTimer, this.projectileCooldown);
+        return;
+      }
+    }
+
     this.projectileTimer -= deltaTime;
 
     if (this.projectileTimer > 0) {
@@ -1670,8 +2054,21 @@ class ProfessorNPC {
     this.projectileTimer = this.projectileCooldown;
     const startX = this.x + this.width / 2;
     const startY = this.y + 18;
-    const vx = this.projectileDirection * (145 + Math.random() * 45);
-    const vy = 38 + Math.random() * 38;
+
+    let vx = this.projectileDirection * (145 + Math.random() * 45);
+    let vy = 38 + Math.random() * 38;
+
+    if (currentLevel === 9 && player) {
+      const targetX = player.x + player.width / 2;
+      const targetY = player.y + player.height / 2;
+      const dx = targetX - startX;
+      const dy = targetY - startY;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const speed = 118 + Math.random() * 24;
+      vx = (dx / distance) * speed;
+      vy = (dy / distance) * speed;
+    }
+
     critiqueProjectiles.push(new CritiqueProjectile(startX, startY, vx, vy));
   }
 
@@ -1701,6 +2098,24 @@ class ProfessorNPC {
     }
 
     this.drawNameLabel(context);
+
+    const activeRequest = getActiveFinalDefenseRequest();
+    if (
+      currentLevel === 9 &&
+      activeRequest &&
+      this.requiredChapterId === activeRequest.id &&
+      !this.isSatisfied
+    ) {
+      drawSpeechBubble(
+        context,
+        `Pede: ${this.requestChapterName}`,
+        this.x + this.width / 2,
+        this.y - 12,
+        150,
+        "#fff5cf",
+        "#25180a"
+      );
+    }
   }
 
   drawNameLabel(context) {
@@ -2085,7 +2500,7 @@ class AllyNPC {
 
     if (!this.following && distanceBetweenCenters(this, player) < 82) {
       this.following = true;
-      this.currentQuote = "Pergunte ao seu orientador!";
+      this.currentQuote = this.quotes[0] || "Pergunte ao seu orientador!";
       this.quoteTimer = 2.6;
       this.idleTimer = 0;
     }
@@ -2396,8 +2811,16 @@ class IceBlock {
   }
 
   update(deltaTime) {
+    const previousBottom = this.y + this.height;
+    const wasGrounded = this.grounded;
+
     this.width = Math.max(0, this.width - this.meltRate * deltaTime);
     this.height = Math.max(0, this.height - this.meltRate * deltaTime);
+
+    if (wasGrounded) {
+      this.y = previousBottom - this.height;
+    }
+
     this.vy += PHYSICS.gravity * deltaTime;
 
     if (this.supportPlatform instanceof MovingPlatform) {
@@ -2705,6 +3128,7 @@ function bindTouchControl(button, control) {
     }
 
     event.preventDefault();
+    resumeGameplayAudio();
     button.setPointerCapture?.(event.pointerId);
     pressTouchControl(control, event.pointerId);
 
@@ -2728,6 +3152,26 @@ function bindTouchControl(button, control) {
 bindTouchControl(btnLeft, "left");
 bindTouchControl(btnRight, "right");
 bindTouchControl(btnJump, "jump");
+
+if (btnDrop) {
+  btnDrop.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+    resumeGameplayAudio();
+    dropCarriedChapter();
+
+    if (typeof canvas.focus === "function") {
+      canvas.focus({ preventScroll: true });
+    }
+  });
+
+  btnDrop.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+}
 
 glossaryButton.addEventListener("click", () => {
   openGlossary(false);
@@ -2759,6 +3203,10 @@ if (fullscreenButton) {
 
 glossaryCloseButton.addEventListener("click", () => {
   closeGlossary();
+});
+
+referenceCaptureCloseButton.addEventListener("click", () => {
+  closeCapturedReference();
 });
 
 document.querySelectorAll("[data-character]").forEach((button) => {
@@ -2836,6 +3284,16 @@ startDirectlyFromQuery();
 window.addEventListener("keydown", (event) => {
   const normalized = normalizeKey(event.key);
 
+  resumeGameplayAudio();
+
+  if (referenceCaptureOpen) {
+    if ([" ", "enter", "escape"].includes(normalized)) {
+      event.preventDefault();
+      closeCapturedReference();
+    }
+    return;
+  }
+
   if (normalized === "g" && gameStarted && !gameEnded && !cutsceneActive) {
     event.preventDefault();
     if (glossaryModal.style.display === "flex") {
@@ -2860,6 +3318,17 @@ window.addEventListener("keydown", (event) => {
 
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(event.key)) {
     event.preventDefault();
+  }
+
+  if (
+    currentLevel === 9 &&
+    (normalized === "arrowdown" || normalized === "s") &&
+    player &&
+    player.carriedChapter
+  ) {
+    event.preventDefault();
+    dropCarriedChapter();
+    return;
   }
 
   keys.add(normalized);
@@ -2889,9 +3358,12 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-window.addEventListener("resize", () => {
-  refreshMobileControlsVisibility();
-});
+window.addEventListener("resize", scheduleMobileControlsRefresh);
+window.addEventListener("orientationchange", scheduleMobileControlsRefresh);
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", scheduleMobileControlsRefresh);
+}
 
 function loadLevel(level) {
   platforms = [];
@@ -2911,6 +3383,7 @@ function loadLevel(level) {
   iceBlock = null;
   researchDesk = null;
   masterDiploma = null;
+  deadlineClock = null;
 
   if (level === 9) {
     loadFinalDefenseLevel();
@@ -3217,16 +3690,20 @@ function loadPraxisIceLevel() {
   currentLevel = 8;
   levelTitle = "PARODIA DA PRAXIS";
   playerStart = { x: 42, y: 438 };
+  const iceStartPlatform = new Plataforma(48, 360, 190, 20, "techno-safe");
 
   platforms = [
-    new Plataforma(0, 492, 230, 48, "ground"),
+    new Plataforma(0, 492, 250, 48, "ground"),
+    iceStartPlatform,
     new MovingPlatform(280, 492, 178, 22, { rangeX: 74, speed: 1.15, variant: "techno-safe" }),
     new Plataforma(486, 492, 154, 48, "furniture"),
     new MovingPlatform(682, 492, 178, 22, { rangeX: 70, speed: 1.05, phase: Math.PI / 2, variant: "techno-safe" }),
     new Plataforma(826, 492, 134, 48, "ground")
   ];
 
-  iceBlock = new IceBlock(96, 432, 60);
+  iceBlock = new IceBlock(96, iceStartPlatform.y - 60, 60);
+  iceBlock.grounded = true;
+  iceBlock.supportPlatform = iceStartPlatform;
   exitDoor = new ExitDoor(900, 418, 44, 74);
 }
 
@@ -3237,48 +3714,61 @@ function loadFinalDefenseLevel() {
 
   platforms = [
     new Plataforma(0, 492, 960, 48, "ground"),
-    new Plataforma(374, 444, 212, 22, "techno-safe"),
-    new FlickeringPlatform(116, 410, 150, 18, 2.35, 1.05, 0),
-    new FlickeringPlatform(326, 356, 150, 18, 2.1, 1.1, 1.1),
-    new FlickeringPlatform(610, 360, 142, 18, 2.25, 1.05, 0.55),
-    new FlickeringPlatform(742, 282, 140, 18, 2.05, 1.15, 1.45),
-    new FlickeringPlatform(498, 238, 150, 18, 2.3, 1.05, 0.25),
-    new FlickeringPlatform(214, 262, 142, 18, 2.15, 1.2, 1.7)
+    new FlickeringPlatform(82, 388, 150, 18, 4.5, 0.7, 0),
+    new FlickeringPlatform(294, 382, 150, 18, 4.35, 0.75, 0.75),
+    new FlickeringPlatform(520, 388, 160, 18, 4.5, 0.7, 1.35),
+    new FlickeringPlatform(752, 382, 142, 18, 4.3, 0.78, 2.0),
+    new FlickeringPlatform(118, 296, 152, 18, 4.4, 0.72, 0.35),
+    new FlickeringPlatform(390, 284, 166, 18, 4.3, 0.75, 1.1),
+    new FlickeringPlatform(650, 292, 152, 18, 4.4, 0.72, 1.75),
+    new FlickeringPlatform(230, 204, 150, 18, 4.25, 0.78, 0.6),
+    new FlickeringPlatform(510, 202, 160, 18, 4.35, 0.75, 1.4),
+    new FlickeringPlatform(760, 204, 132, 18, 4.25, 0.78, 2.1)
   ];
 
-  thesisChapters = [
-    new ThesisChapter(174, 378, 1, "Capitulo 1"),
-    new ThesisChapter(370, 324, 2, "Capitulo 2"),
-    new ThesisChapter(792, 250, 3, "Capitulo 3"),
-    new ThesisChapter(542, 206, 4, "Capitulo 4")
-  ];
+  thesisChapters = FINAL_DEFENSE_CHAPTERS.map((chapter, index) => {
+    const spawn = FINAL_DEFENSE_CHAPTER_SPAWNS[index];
+    return new ThesisChapter(spawn.x, spawn.y, chapter.id, chapter.name, chapter.label);
+  });
 
-  researchDesk = new ResearchDesk(WIDTH / 2 - 66, 410);
+  researchDesk = null;
+  deadlineClock = new DeadlineClock(348, 344);
+  finalDefenseRequestIndex = 0;
+  chapterShuffleTimer = FINAL_DEFENSE_CHAPTER_MOVE_INTERVAL;
+  chapterShuffleStep = 0;
 
   professorNPCs = [
     new ProfessorNPC(96, 438, "Prof. Celi", 0, {
       shootsCritiques: true,
       projectileDirection: 1,
-      projectileCooldown: 2.25,
-      initialDelay: 0.8
+      projectileCooldown: 3.1,
+      initialDelay: 1.1,
+      requiredChapterId: 1,
+      requestChapterName: "Introducao"
     }),
     new ProfessorNPC(268, 438, "Prof. Giordano", 0, {
       shootsCritiques: true,
       projectileDirection: 1,
-      projectileCooldown: 2.55,
-      initialDelay: 1.4
+      projectileCooldown: 3.25,
+      initialDelay: 1.3,
+      requiredChapterId: 2,
+      requestChapterName: "Metodologia"
     }),
     new ProfessorNPC(690, 438, "Prof. Juliana", 0, {
       shootsCritiques: true,
       projectileDirection: -1,
-      projectileCooldown: 2.15,
-      initialDelay: 0.35
+      projectileCooldown: 3,
+      initialDelay: 1,
+      requiredChapterId: 3,
+      requestChapterName: "Desenvolvimento"
     }),
     new ProfessorNPC(842, 438, "Prof. Emerson", 0, {
       shootsCritiques: true,
       projectileDirection: -1,
-      projectileCooldown: 2.7,
-      initialDelay: 1.1
+      projectileCooldown: 3.35,
+      initialDelay: 1.4,
+      requiredChapterId: 4,
+      requestChapterName: "Conclusao"
     })
   ];
 
@@ -3418,13 +3908,41 @@ function acceptTermsAndStart() {
   startGame(character, characterKey);
 }
 
-function showStudentSelectionScreen(targetLevel = 7, instructionText = QUALIFICATION_STUDENT_TEXT, title = "Banca de Qualifica\u00e7\u00e3o") {
+function getMentorCharacterName() {
+  return CHARACTERS[mentorCharacterKey]?.name || "o personagem escolhido no inicio";
+}
+
+function getCurrentStudentName() {
+  return currentStudentKey ? CHARACTERS[currentStudentKey]?.name : "";
+}
+
+function getQualificationStudentText() {
+  const mentorName = getMentorCharacterName();
+
+  return `${mentorName}, o personagem escolhido por voce no inicio, agora precisa escolher um orientando para a Banca de Qualificacao. Selecione o estudante que entrara em cena: ele sera o personagem jogavel nesta etapa. Cada professor exige um conceito especifico; encontre as teorias corretas e entregue-as aos avaliadores correspondentes.`;
+}
+
+function getFinalDefenseStudentText() {
+  const mentorName = getMentorCharacterName();
+  const currentStudentName = getCurrentStudentName();
+  const continuityText = currentStudentName
+    ? `Voce pode manter ${currentStudentName} como orientando ou escolher outro estudante.`
+    : "Voce pode manter o orientando atual ou escolher outro estudante.";
+
+  return `${mentorName} volta a orientar a escolha antes da Defesa Final. ${continuityText} O orientando selecionado sera o personagem jogavel da fase 9: sobreviva a banca, encontre os capitulos finais e entregue cada parte ao professor que solicitou.`;
+}
+
+function getStudentSelectionInstructionText(targetLevel) {
+  return targetLevel === 9 ? getFinalDefenseStudentText() : getQualificationStudentText();
+}
+
+function showStudentSelectionScreen(targetLevel = 7, instructionText = "", title = "Banca de Qualifica\u00e7\u00e3o") {
   hideEndOverlays();
   clearAllInput(true);
   setMobileControlsVisible(false);
   pendingStudentLevel = targetLevel;
   studentSelectionTitle.innerText = title;
-  studentInstructionText.innerText = instructionText;
+  studentInstructionText.innerText = instructionText || getStudentSelectionInstructionText(targetLevel);
   renderStudentPreviews();
   studentSelectionScreen.style.display = "flex";
   const firstStudentButton = studentSelectionScreen.querySelector("[data-student]");
@@ -3441,6 +3959,8 @@ function startQualificationWithStudent(studentKey) {
     return;
   }
 
+  audioManager.init();
+  currentStudentKey = studentKey;
   currentCharacter = student;
   currentCharacterKey = studentKey;
   currentLevel = pendingStudentLevel;
@@ -3485,8 +4005,15 @@ function startDirectlyFromQuery() {
 
   const character = CHARACTERS[request.characterKey];
   skipBossCutsceneForTest = request.level === 6;
+  audioManager.init();
   currentCharacter = character;
   currentCharacterKey = request.characterKey;
+  if (request.level <= 6) {
+    mentorCharacterKey = request.characterKey;
+    currentStudentKey = "";
+  } else {
+    currentStudentKey = request.characterKey;
+  }
   currentLevel = request.level;
   characterSelect.classList.add("is-hidden");
   termsModal.style.display = "none";
@@ -3503,6 +4030,8 @@ function startGame(character, characterKey = "emerson") {
   audioManager.init();
   currentCharacter = character;
   currentCharacterKey = characterKey;
+  mentorCharacterKey = characterKey;
+  currentStudentKey = "";
   currentLevel = 1;
   resetLevelState(character);
   characterSelect.classList.add("is-hidden");
@@ -3531,6 +4060,8 @@ function resetLevelState(character) {
   cutsceneUI.style.display = "none";
   glossaryOpenedInGame = false;
   glossaryModal.style.display = "none";
+  referenceCaptureOpen = false;
+  referenceCaptureOverlay.style.display = "none";
   studentSelectionScreen.style.display = "none";
   loadLevel(currentLevel);
   player = new Player(character);
@@ -3542,6 +4073,14 @@ function resetLevelState(character) {
   statusTimer = 0;
   resetIdleQuoteState();
   hideEndOverlays();
+
+  if (currentLevel === 9) {
+    const activeRequest = getActiveFinalDefenseRequest();
+    if (activeRequest) {
+      statusMessage = `${activeRequest.professorName} pediu ${activeRequest.name}`;
+      statusTimer = 2.4;
+    }
+  }
 
   cookies.forEach((cookie) => {
     cookie.collected = false;
@@ -3573,7 +4112,9 @@ function startGameLoop() {
 
   gameStarted = true;
   lastTime = performance.now();
-  if (currentLevel === 6 && !cutsceneActive) {
+  if (currentLevel === 9) {
+    audioManager.playFinalDefenseBGM();
+  } else if (currentLevel === 6 && !cutsceneActive) {
     audioManager.playBossBGM();
   } else if (currentLevel !== 6) {
     audioManager.playBGM();
@@ -3594,8 +4135,10 @@ function gameLoop(time) {
   update(deltaTime);
   draw();
 
-  if (!gameEnded) {
+  if (!gameEnded && !referenceCaptureOpen) {
     animationFrameId = requestAnimationFrame(gameLoop);
+  } else {
+    animationFrameId = null;
   }
 }
 
@@ -3681,8 +4224,12 @@ function update(deltaTime) {
       audioManager.playWin();
       statusMessage = "Referencia bibliografica desbloqueada";
       statusTimer = 1.8;
+      showCapturedReference(scroll.itemId);
+      return;
     }
   }
+
+  updateFinalDefenseChapterShuffling(deltaTime);
 
   for (const concept of conceptItems) {
     concept.update(deltaTime);
@@ -3699,11 +4246,27 @@ function update(deltaTime) {
   for (const chapter of thesisChapters) {
     chapter.update(deltaTime);
 
-    if (!chapter.collected && !player.carriedChapter && rectsOverlap(player, chapter.bounds)) {
+    if (chapter.canBeCollected() && !player.carriedChapter && rectsOverlap(player, chapter.bounds)) {
       chapter.collected = true;
       player.carriedChapter = chapter;
+      updateDropControlVisibility();
       audioManager.playWin();
-      statusMessage = `Capitulo coletado: ${chapter.name}`;
+      const activeRequest = getActiveFinalDefenseRequest();
+      const targetProfessor = activeRequest?.id === chapter.id ? activeRequest.professorName : "o professor solicitante";
+      statusMessage = `Capitulo coletado: ${chapter.name}. Entregue a ${targetProfessor}`;
+      statusTimer = 1.8;
+    }
+  }
+
+  if (deadlineClock) {
+    deadlineClock.update(deltaTime);
+
+    if (!deadlineClock.collected && rectsOverlap(player, deadlineClock.bounds)) {
+      deadlineClock.collected = true;
+      privacy = 100;
+      nivelDeRastreamento = 0;
+      audioManager.playWin();
+      statusMessage = "Relogio coletado: prazo restaurado";
       statusTimer = 1.8;
     }
   }
@@ -3804,6 +4367,10 @@ function draw() {
     researchDesk.draw(ctx);
   }
 
+  if (deadlineClock) {
+    deadlineClock.draw(ctx);
+  }
+
   if (exitDoor) {
     exitDoor.draw(ctx);
   }
@@ -3850,6 +4417,8 @@ function draw() {
 
   if (player) {
     player.draw(ctx);
+    drawCarriedChapterHint(ctx);
+
     if (currentLevel !== 7 && currentLevel !== 9) {
       drawIdleQuoteBubble(ctx);
     }
@@ -3909,31 +4478,174 @@ function handleProfessorDelivery(professor) {
   statusTimer = 1.8;
 }
 
-function updateFinalDefensePuzzle() {
-  if (currentLevel !== 9 || !researchDesk || !player.carriedChapter) {
-    return;
+function getActiveFinalDefenseRequest() {
+  return FINAL_DEFENSE_CHAPTERS[finalDefenseRequestIndex] || null;
+}
+
+function getFinalDefenseChapterById(chapterId) {
+  return thesisChapters.find((chapter) => chapter.id === chapterId) || null;
+}
+
+function getFinalDefenseProfessorByChapterId(chapterId) {
+  return professorNPCs.find((professor) => professor.requiredChapterId === chapterId) || null;
+}
+
+function getCarriedChapterDropPosition(chapter) {
+  const direction = player.facing || 1;
+  const desiredX = clamp(
+    player.x + player.width / 2 + direction * 28 - chapter.width / 2,
+    6,
+    WIDTH - chapter.width - 6
+  );
+  const playerBottom = player.y + player.height;
+  let supportPlatform = null;
+  let bestDistance = Infinity;
+
+  for (const platform of platforms) {
+    if (!platform.isSolid()) {
+      continue;
+    }
+
+    const overlapsX = desiredX + chapter.width > platform.x + 4 && desiredX < platform.x + platform.width - 4;
+
+    if (!overlapsX || platform.y < player.y) {
+      continue;
+    }
+
+    const distance = Math.abs(platform.y - playerBottom);
+
+    if (distance <= 150 && distance < bestDistance) {
+      bestDistance = distance;
+      supportPlatform = platform;
+    }
   }
 
-  if (!rectsOverlap(player, researchDesk.bounds)) {
-    return;
+  if (!supportPlatform) {
+    return {
+      x: desiredX,
+      y: clamp(player.y + 8, 48, HEIGHT - chapter.height - 56)
+    };
   }
 
-  researchDesk.deliveredCount += 1;
+  return {
+    x: clamp(desiredX, supportPlatform.x + 4, supportPlatform.x + supportPlatform.width - chapter.width - 4),
+    y: supportPlatform.y - chapter.height - 6
+  };
+}
+
+function dropCarriedChapter() {
+  if (currentLevel !== 9 || !player || !player.carriedChapter) {
+    return false;
+  }
+
+  const chapter = player.carriedChapter;
+  const position = getCarriedChapterDropPosition(chapter);
+
+  chapter.moveTo(position.x, position.y);
+  chapter.collected = false;
+  chapter.pickupDelay = FINAL_DEFENSE_DROPPED_CHAPTER_COOLDOWN;
   player.carriedChapter = null;
+  audioManager.playSonar();
+  statusMessage = `Capitulo solto: ${chapter.name}`;
+  statusTimer = 1.2;
+  updateDropControlVisibility();
+  return true;
+}
+
+function resetCarriedChapterToPlatform() {
+  if (!player.carriedChapter) {
+    return;
+  }
+
+  const spawn = FINAL_DEFENSE_CHAPTER_SPAWNS[(player.carriedChapter.id + chapterShuffleStep) % FINAL_DEFENSE_CHAPTER_SPAWNS.length];
+  player.carriedChapter.moveTo(spawn.x, spawn.y);
+  player.carriedChapter.collected = false;
+  player.carriedChapter.pickupDelay = FINAL_DEFENSE_DROPPED_CHAPTER_COOLDOWN;
+  player.carriedChapter = null;
+  updateDropControlVisibility();
+}
+
+function updateFinalDefenseChapterShuffling(deltaTime) {
+  if (currentLevel !== 9 || thesisChapters.length === 0) {
+    return;
+  }
+
+  chapterShuffleTimer -= deltaTime;
+
+  if (chapterShuffleTimer > 0) {
+    return;
+  }
+
+  chapterShuffleTimer = FINAL_DEFENSE_CHAPTER_MOVE_INTERVAL;
+  chapterShuffleStep += 1;
+
+  thesisChapters.forEach((chapter, index) => {
+    if (chapter.collected || chapter.delivered) {
+      return;
+    }
+
+    const spawn = FINAL_DEFENSE_CHAPTER_SPAWNS[(index + chapterShuffleStep) % FINAL_DEFENSE_CHAPTER_SPAWNS.length];
+    chapter.moveTo(spawn.x, spawn.y);
+  });
+
+  statusMessage = "Os capitulos mudaram de plataforma";
+  statusTimer = 1.4;
+}
+
+function updateFinalDefensePuzzle() {
+  if (currentLevel !== 9 || !player.carriedChapter) {
+    return;
+  }
+
+  const activeRequest = getActiveFinalDefenseRequest();
+
+  if (!activeRequest) {
+    return;
+  }
+
+  const requestingProfessor = getFinalDefenseProfessorByChapterId(activeRequest.id);
+
+  if (!requestingProfessor || !rectsOverlap(player, requestingProfessor.bounds)) {
+    return;
+  }
+
+  if (player.carriedChapter.id !== activeRequest.id) {
+    resetCarriedChapterToPlatform();
+    audioManager.playCollision();
+    statusMessage = `${requestingProfessor.characterName} pediu ${activeRequest.name}`;
+    statusTimer = 1.8;
+    return;
+  }
+
+  requestingProfessor.isSatisfied = true;
+  player.carriedChapter.delivered = true;
+  player.carriedChapter = null;
+  updateDropControlVisibility();
+  finalDefenseRequestIndex += 1;
   audioManager.playWin();
-  statusMessage = `Capitulo entregue: ${researchDesk.deliveredCount}/4`;
+
+  const deliveredCount = finalDefenseRequestIndex;
+  statusMessage = `Capitulo entregue: ${deliveredCount}/4`;
   statusTimer = 1.8;
 
-  if (researchDesk.deliveredCount >= 4 && !masterDiploma) {
+  if (deliveredCount >= FINAL_DEFENSE_CHAPTERS.length && !masterDiploma) {
     masterDiploma = new MasterDiploma(WIDTH / 2 - 27, HEIGHT / 2 - 18);
     statusMessage = "Defesa aprovada: pegue o diploma!";
     statusTimer = 2.4;
+    return;
+  }
+
+  const nextRequest = getActiveFinalDefenseRequest();
+  if (nextRequest) {
+    statusMessage = `${nextRequest.professorName} pediu ${nextRequest.name}`;
+    statusTimer = 2.2;
   }
 }
 
 function applyCritiqueProjectilePenalty(projectile) {
   projectile.active = false;
   audioManager.playCollision();
+  applyPrivacyDamage(FINAL_DEFENSE_PROJECTILE_DAMAGE);
 
   const direction = Math.sign(projectile.vx) || (player.x < projectile.x ? -1 : 1);
   player.vx = direction * 420;
@@ -3941,7 +4653,7 @@ function applyCritiqueProjectilePenalty(projectile) {
   player.grounded = false;
   player.invulnerabilityTimer = 0.9;
 
-  statusMessage = "Critica da banca: reorganize seu argumento!";
+  statusMessage = currentLevel === 9 ? "Prazo de entrega reduzido" : "Impacto recebido";
   statusTimer = 1.4;
 }
 
@@ -3995,12 +4707,12 @@ function finishGame(result, customDefeatMessage = "") {
     audioManager.playWin();
 
     if (currentLevel === 6) {
-      showStudentSelectionScreen(7, QUALIFICATION_STUDENT_TEXT, "Banca de Qualifica\u00e7\u00e3o");
+      showStudentSelectionScreen(7, getQualificationStudentText(), "Banca de Qualifica\u00e7\u00e3o");
       return;
     }
 
     if (currentLevel === 8) {
-      showStudentSelectionScreen(9, FINAL_DEFENSE_STUDENT_TEXT, "Defesa Final");
+      showStudentSelectionScreen(9, getFinalDefenseStudentText(), "Defesa Final");
       return;
     }
 
@@ -4243,10 +4955,11 @@ function drawHud() {
   const panelY = 18;
   const panelWidth = 302;
   const panelHeight = 92;
-  const barWidth = 248;
+  const barWidth = 214;
   const barHeight = 14;
   const barX = panelX + 22;
   const barY = panelY + 56;
+  const percentX = panelX + panelWidth - 26;
   const hudTextColor = currentLevel === 3 ? "#39ff14" : "#f5f7fb";
   const hudMutedColor = currentLevel === 3 ? "rgba(57, 255, 20, 0.72)" : "#aeb8c4";
 
@@ -4260,7 +4973,7 @@ function drawHud() {
 
   ctx.fillStyle = hudMutedColor;
   ctx.font = "12px Inter, Segoe UI, Arial";
-  ctx.fillText("Barra de Privacidade", barX, barY - 8);
+  ctx.fillText(currentLevel === 9 ? "Prazo de entrega" : "Barra de Privacidade", barX, barY - 8);
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
   ctx.lineWidth = 1;
@@ -4274,13 +4987,48 @@ function drawHud() {
 
   ctx.fillStyle = hudTextColor;
   ctx.font = "700 12px Inter, Segoe UI, Arial";
-  ctx.fillText(`${Math.round(privacy)}%`, barX + barWidth + 10, barY + 12);
+  ctx.textAlign = "right";
+  ctx.fillText(`${Math.round(privacy)}%`, percentX, barY + 12);
+  ctx.textAlign = "left";
 
   if (statusTimer > 0) {
     ctx.fillStyle = privacy === 0 ? "#ff5c5c" : "#ffcf4a";
     ctx.font = "700 14px Inter, Segoe UI, Arial";
     ctx.fillText(statusMessage, panelX + 22, panelY + 82);
   }
+}
+
+function drawCarriedChapterHint(context) {
+  if (currentLevel !== 9 || !player || !player.carriedChapter) {
+    return;
+  }
+
+  const label = areMobileControlsVisible() ? "Toque em Soltar capitulo" : "S / Baixo: soltar capitulo";
+  const x = player.x + player.width / 2;
+  const y = Math.max(76, player.y - 42);
+
+  context.save();
+  context.font = "700 11px Inter, Segoe UI, Arial";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  const paddingX = 10;
+  const textWidth = context.measureText(label).width;
+  const width = Math.min(210, textWidth + paddingX * 2);
+  const height = 22;
+  const bubbleX = clamp(x - width / 2, 10, WIDTH - width - 10);
+  const bubbleY = clamp(y - height, 74, HEIGHT - height - 18);
+
+  context.fillStyle = "rgba(8, 10, 14, 0.78)";
+  roundRect(context, bubbleX, bubbleY, width, height, 8);
+  context.fill();
+  context.strokeStyle = "rgba(255, 207, 74, 0.82)";
+  context.lineWidth = 1.5;
+  roundRect(context, bubbleX, bubbleY, width, height, 8);
+  context.stroke();
+  context.fillStyle = "#fff5cf";
+  context.fillText(label, bubbleX + width / 2, bubbleY + height / 2 + 0.5);
+  context.restore();
 }
 
 function rectsOverlap(a, b) {
