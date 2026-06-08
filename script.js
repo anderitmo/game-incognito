@@ -1325,6 +1325,7 @@ let allyNPC = null;
 let exitDoor = null;
 let digitalRain = null;
 let bossCamera = null;
+let bossCameras = [];
 let cutsceneActive = false;
 let cutsceneIndex = 0;
 let cutsceneDialogues = [];
@@ -2603,20 +2604,23 @@ class AllyNPC {
 }
 
 class BossCamera {
-  constructor(x, y) {
+  constructor(x, y, options = {}) {
     this.x = x;
     this.y = y;
     this.width = 116;
     this.height = 78;
     this.phase = "idle";
-    this.timer = 0;
-    this.attackInterval = 5;
-    this.chargeDuration = 1.25;
-    this.fireDuration = 1.15;
+    this.timer = options.initialTimer || 0;
+    this.attackInterval = options.attackInterval || 5;
+    this.chargeDuration = options.chargeDuration || 1.25;
+    this.fireDuration = options.fireDuration || 1.15;
     this.laserX = WIDTH / 2 - 18;
-    this.laserWidth = 36;
+    this.laserWidth = options.laserWidth || 36;
     this.damageCooldown = 0;
-    this.patrolDirection = 1;
+    this.patrolDirection = options.patrolDirection || 1;
+    this.patrolSpeed = options.patrolSpeed || 36;
+    this.patrolMinX = options.patrolMinX || 120;
+    this.patrolMaxX = options.patrolMaxX || WIDTH - 120 - this.width;
   }
 
   get eyeX() {
@@ -2648,12 +2652,12 @@ class BossCamera {
     this.damageCooldown = Math.max(0, this.damageCooldown - deltaTime);
     this.timer += deltaTime;
 
-    this.x += this.patrolDirection * 36 * deltaTime;
-    if (this.x < 120) {
-      this.x = 120;
+    this.x += this.patrolDirection * this.patrolSpeed * deltaTime;
+    if (this.x < this.patrolMinX) {
+      this.x = this.patrolMinX;
       this.patrolDirection = 1;
-    } else if (this.x + this.width > WIDTH - 120) {
-      this.x = WIDTH - 120 - this.width;
+    } else if (this.x > this.patrolMaxX) {
+      this.x = this.patrolMaxX;
       this.patrolDirection = -1;
     }
 
@@ -3379,6 +3383,7 @@ function loadLevel(level) {
   books = [];
   allyNPC = null;
   bossCamera = null;
+  bossCameras = [];
   exitDoor = null;
   iceBlock = null;
   researchDesk = null;
@@ -3648,7 +3653,29 @@ function loadBossFightLevel() {
   });
   allyNPC.following = true;
 
-  bossCamera = new BossCamera(WIDTH / 2 - 58, 34);
+  bossCameras = [
+    new BossCamera(156, 34, {
+      attackInterval: 3.55,
+      chargeDuration: 0.95,
+      fireDuration: 1.05,
+      initialTimer: 2.35,
+      patrolSpeed: 64,
+      patrolDirection: 1,
+      patrolMinX: 96,
+      patrolMaxX: 412
+    }),
+    new BossCamera(688, 34, {
+      attackInterval: 3.55,
+      chargeDuration: 0.95,
+      fireDuration: 1.05,
+      initialTimer: 0.55,
+      patrolSpeed: 58,
+      patrolDirection: -1,
+      patrolMinX: 432,
+      patrolMaxX: WIDTH - 96 - 116
+    })
+  ];
+  bossCamera = bossCameras[0];
   configureExitDoorForCurrentLevel();
 
   if (!skipBossCutsceneForTest) {
@@ -4191,7 +4218,11 @@ function update(deltaTime) {
     allyNPC.update(deltaTime);
   }
 
-  if (bossCamera) {
+  if (bossCameras.length > 0) {
+    for (const camera of bossCameras) {
+      camera.update(deltaTime);
+    }
+  } else if (bossCamera) {
     bossCamera.update(deltaTime);
   }
 
@@ -4395,7 +4426,11 @@ function draw() {
     speaker.draw(ctx);
   }
 
-  if (bossCamera) {
+  if (bossCameras.length > 0) {
+    for (const camera of bossCameras) {
+      camera.draw(ctx);
+    }
+  } else if (bossCamera) {
     bossCamera.draw(ctx);
   }
 
