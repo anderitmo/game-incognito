@@ -54,17 +54,20 @@ const bordoesEmerson = [
 
 // Bordões da Profa. Juliana. Adicione novos bordões da Juliana aqui.
 const bordoesJuliana = [
-  "Como eu sou geografa, vou puxar para o meu lado..."
+  "Como eu sou geográfa, vou puxar para o meu lado..."
 ];
 
 // Bordões da Profa. Celi. Adicione novos bordões da Celi aqui.
 const bordoesCeli = [
-  "Pergunte ao seu orientador!"
+  "Pergunte ao seu orientador!",
+  "Já leu Ausubel?"
+  
 ];
 
 // Bordões do Prof. Giordano. Adicione novos bordões do Giordano aqui.
 const bordoesGiordano = [
-  "Se eu estiver na sua banca eu vou perguntar!"
+  "Se eu estiver na sua banca eu vou perguntar!",
+  "O Qui-Quadrado resolve!"
 ];
 
 const quotesDefeat = [
