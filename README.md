@@ -12,7 +12,7 @@ https://anderitmo.github.io/game-incognito/
 
 ## 📖 Sobre o Projeto
 
-**Incógnito** é um jogo de plataforma 2D executável direto no navegador, desenvolvido como um projeto prático para a disciplinas **Sociedade, Trabalho e Educação** do **Programa de Pós-graduação Profissional em Gestão e Desenvolvimento da Educação Profissional** ministrados pelos docentes Prof. Dr. Emerson Freire e Profa. Dra. Juliana Augusta Verona.
+**Incógnito** é um jogo de plataforma 2D executável direto no navegador, desenvolvido como um projeto prático para a disciplinas **Sociedade, Trabalho e Educação** do **Mestrado Profissional em Gestão e Desenvolvimento da Educação Profissional** ministrados pelos docentes Prof. Dr. Emerson Freire e Profa. Dra. Juliana Augusta Verona.
 
 O objetivo principal é traduzir conceitos acadêmicos complexos — como o **Capitalismo de Vigilância** de Shoshana Zuboff, a Cultura Técnica e a Tecno-estética — em mecânicas interativas de *Game Design*.
 
@@ -63,6 +63,16 @@ Este projeto foi construído do zero, sem o uso de engines externas (como Unity 
 * **CSS3:** Para a interface minimalista de menus e balões de diálogo.
 * **Vanilla JavaScript:** Para o *Game Loop*, física de colisões, controle de estados e lógica de entidades.
 * **Web Audio API:** Sintetizador nativo do JavaScript para criar efeitos sonoros processuais (ondas senoidais e quadradas), dispensando arquivos `.mp3`.
+
+* ---
+
+## 💬 Integrantes do grupo
+
+* Anderson Luiz de Oliveira
+* Myllena Araujo Alves Pereira
+* Rafael de Souza Oliveira
+* Rodrigo de Souza Boschini
+* Viviane Marengoni Garo
 
 ---
 
