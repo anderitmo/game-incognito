@@ -64,7 +64,7 @@ Este projeto foi construído do zero, sem o uso de engines externas (como Unity 
 * **Vanilla JavaScript:** Para o *Game Loop*, física de colisões, controle de estados e lógica de entidades.
 * **Web Audio API:** Sintetizador nativo do JavaScript para criar efeitos sonoros processuais (ondas senoidais e quadradas), dispensando arquivos `.mp3`.
 
-* ---
+---
 
 ## 💬 Integrantes do grupo
 
